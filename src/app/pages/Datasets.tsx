@@ -41,7 +41,7 @@ function DatasetsIndexView() {
             Datasets
           </h1>
           <p className="text-[13px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Governed datasets powering analytics across BI Fabric.
+            Governed datasets powering analytics across Report Hub.
           </p>
         </div>
         <div className="text-[11px] text-[#6B7280] bg-blue-50 px-3 py-1.5 rounded-md" style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -194,7 +194,7 @@ function DatasetsIndexView() {
               Explore dataset insights
             </h3>
             <p className="text-[12px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
-              Datasets power insights across BI Fabric.
+              Datasets power insights across Report Hub.
             </p>
           </div>
           <div className="flex gap-3">
@@ -439,13 +439,13 @@ function DatasetDetailView({ datasetId }: { datasetId: string }) {
 
         <div className="bg-[#F8F9FB] rounded-lg p-3 border border-[#E5E7EB]">
           <p className="text-[11px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Preview rendered via BI Fabric (lightweight)
+            Preview rendered via Report Hub (lightweight)
           </p>
         </div>
 
         <div className="mt-4 pt-4 border-t border-[#E5E7EB]">
           <p className="text-[10px] text-[#6B7280] text-center" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Powered by BI Fabric dummy data (connected model)
+            Powered by Report Hub dummy data (connected model)
           </p>
         </div>
       </div>
@@ -511,7 +511,7 @@ function DatasetDetailView({ datasetId }: { datasetId: string }) {
       <div className="bg-[#EFF6FF] rounded-[12px] border border-[#BFDBFE] p-5 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <p className="text-[12px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
-            BI Fabric manages where insights live — not where users work.
+            Report Hub manages where insights live — not where users work.
           </p>
         </div>
 

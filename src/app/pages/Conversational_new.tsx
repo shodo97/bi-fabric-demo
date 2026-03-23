@@ -237,7 +237,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
         {
           id: 'demo3-2',
           type: 'assistant',
-          content: 'Here are the reports you have access to.\nThese reports come from multiple analytics platforms connected through BI Fabric.',
+          content: 'Here are the reports you have access to.\nThese reports come from multiple analytics platforms connected through Report Hub.',
           renderType: 'reports_list',
           data: { reports: getAllReports().slice(0, 7), showActions: true },
           timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48 + 600),
@@ -297,6 +297,8 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
   const [addToReportTarget, setAddToReportTarget] = useState<any | null>(null);
   const [showAddToReportConfirmation, setShowAddToReportConfirmation] = useState(false);
   const [addToReportBadge, setAddToReportBadge] = useState<Record<string, string>>({});
+  const [chartRefinements, setChartRefinements] = useState<Record<string, { chartType: string; title: string; data: any[] }>>({});
+  const [refinementInputs, setRefinementInputs] = useState<Record<string, string>>({});
   const chatEndRef = useRef<HTMLDivElement>(null);
   const messageCounterRef = useRef(0);
   const migrationRouteInitialized = useRef<string | null>(null);
@@ -645,7 +647,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
 
       if (action.includes('My Reports')) {
         addAssistantMessage(
-          'Here are the reports you have access to.\nThese reports come from multiple analytics platforms connected through BI Fabric.',
+          'Here are the reports you have access to.\nThese reports come from multiple analytics platforms connected through Report Hub.',
           'reports_list',
           { reports: allReports.slice(0, 7), showActions: true }
         );
@@ -681,7 +683,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
 
       if (action.toLowerCase().includes('explore my reports')) {
         addAssistantMessage(
-          'Here are the reports you have access to.\nThese reports come from multiple analytics platforms connected through BI Fabric.',
+          'Here are the reports you have access to.\nThese reports come from multiple analytics platforms connected through Report Hub.',
           'reports_list',
           { reports: allReports.slice(0, 7), showActions: true }
         );
@@ -777,6 +779,42 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
         );
       }
     }, 600);
+  };
+
+  const handleChartRefinement = (messageId: string, prompt: string, originalData: any) => {
+    const lowerPrompt = prompt.toLowerCase();
+    let newChartType = originalData.chartType;
+    let newTitle = originalData.title;
+    let newData = originalData.data;
+
+    // Switch chart type
+    if (lowerPrompt.includes('bar chart') || lowerPrompt.includes('bar graph')) {
+      newChartType = 'bar';
+      newTitle = originalData.title + ' (Bar View)';
+    } else if (lowerPrompt.includes('pie chart') || lowerPrompt.includes('pie')) {
+      newChartType = 'pie';
+      newTitle = originalData.title + ' (Distribution)';
+    } else if (lowerPrompt.includes('line chart') || lowerPrompt.includes('line graph') || lowerPrompt.includes('trend')) {
+      newChartType = 'line';
+      newTitle = originalData.title + ' (Trend View)';
+    }
+
+    // Filter data
+    if (lowerPrompt.includes('q1') || lowerPrompt.includes('first quarter')) {
+      newData = originalData.data.slice(0, Math.ceil(originalData.data.length / 4));
+      newTitle = newTitle.replace(/\)$/, '') + (newTitle.includes('(') ? ' - Q1)' : ' (Q1)');
+    } else if (lowerPrompt.includes('top 5') || lowerPrompt.includes('top five')) {
+      newData = originalData.data.slice(0, 5);
+      newTitle = newTitle.replace(/\)$/, '') + (newTitle.includes('(') ? ' - Top 5)' : ' (Top 5)');
+    } else if (lowerPrompt.includes('last 3') || lowerPrompt.includes('last three')) {
+      newData = originalData.data.slice(-3);
+    }
+
+    setChartRefinements(prev => ({
+      ...prev,
+      [messageId]: { chartType: newChartType, title: newTitle, data: newData }
+    }));
+    setRefinementInputs(prev => ({ ...prev, [messageId]: '' }));
   };
 
   const handleAddChartToReport = (messageId: string) => {
@@ -953,8 +991,8 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                 icon: '🔍'
               },
               { 
-                name: 'BI Fabric', 
-                description: 'Existing BI Fabric reports or dashboards',
+                name: 'Report Hub', 
+                description: 'Existing Report Hub reports or dashboards',
                 icon: '🎯'
               },
             ]
@@ -1582,8 +1620,8 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
             icon: '🔍'
           },
           { 
-            name: 'BI Fabric', 
-            description: 'Existing BI Fabric reports or dashboards',
+            name: 'Report Hub', 
+            description: 'Existing Report Hub reports or dashboards',
             icon: '🎯'
           },
         ]
@@ -1920,7 +1958,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
           const isEnterpriseNeeded = createReportState.expectedUsage === 'High' || hasAdvancedNeeds;
           
           // Select an appropriate enterprise platform based on domain if needed
-          let recommendedPlatform = 'Open-source BI Fabric';
+          let recommendedPlatform = 'Open-source Report Hub';
           if (isEnterpriseNeeded) {
             const domain = createReportState.selectedDataset?.domain;
             if (domain === 'Sales') recommendedPlatform = 'Tableau';
@@ -2160,7 +2198,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
       createReportState.advancedNeeds.some(n => n !== 'None / Basic Dashboarding');
     const isEnterprise = createReportState.expectedUsage === 'High' || hasAdvancedNeeds;
     
-    let sourceApp = 'Open-source BI Fabric';
+    let sourceApp = 'Open-source Report Hub';
     if (isEnterprise) {
       const domain = createReportState.selectedDataset?.domain;
       if (domain === 'Sales') sourceApp = 'Tableau';
@@ -2183,7 +2221,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
       time_range_supported: 'Last 6 Months',
       top_insights: [
         `Initial configuration completed via guided intent flow.`,
-        isEnterprise ? `Enterprise routing to ${sourceApp} enabled for advanced requirements.` : `Standard cost-effective deployment on Open-source BI Fabric.`
+        isEnterprise ? `Enterprise routing to ${sourceApp} enabled for advanced requirements.` : `Standard cost-effective deployment on Open-source Report Hub.`
       ],
       used_by_roles: isEnterprise ? ['Executive', 'Manager'] : ['Analyst'],
     };
@@ -2197,7 +2235,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
 
     // Add success message
     addAssistantMessage(
-      `**Report created successfully!**\n\n${reportName} is now available in your reports catalog. It has been provisioned on **${isEnterprise ? sourceApp : 'Open-source BI Fabric'}** based on your performance and governance requirements.`,
+      `**Report created successfully!**\n\n${reportName} is now available in your reports catalog. It has been provisioned on **${isEnterprise ? sourceApp : 'Open-source Report Hub'}** based on your performance and governance requirements.`,
       'text'
     );
 
@@ -2597,7 +2635,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
         setIsReportPanelOpen(false);
         setSelectedReport(null);
         addAssistantMessage(
-          'Here are the reports you have access to.\nThese reports come from multiple analytics platforms connected through BI Fabric.',
+          'Here are the reports you have access to.\nThese reports come from multiple analytics platforms connected through Report Hub.',
           'reports_list',
           { reports: allReports.slice(0, 7), showActions: true }
         );
@@ -2645,7 +2683,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
         });
       } else if (q.includes('report') && (q.includes('show') || q.includes('list') || q.includes('my'))) {
         addAssistantMessage(
-          'Here are the reports you have access to.\nThese reports come from multiple analytics platforms connected through BI Fabric.',
+          'Here are the reports you have access to.\nThese reports come from multiple analytics platforms connected through Report Hub.',
           'reports_list',
           { reports: allReports.slice(0, 7), showActions: true }
         );
@@ -2912,7 +2950,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
         return;
       } else if (q.includes('which reports can help') || q.includes('reports can help')) {
         addAssistantMessage(
-          'Here are the reports you have access to.\nThese reports come from multiple analytics platforms connected through BI Fabric.',
+          'Here are the reports you have access to.\nThese reports come from multiple analytics platforms connected through Report Hub.',
           'reports_list',
           { reports: allReports.slice(0, 7), showActions: true }
         );
@@ -3080,7 +3118,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
         setIsReportPanelOpen(false);
         setSelectedReport(null);
         addAssistantMessage(
-          'Here are the reports you have access to.\nThese reports come from multiple analytics platforms connected through BI Fabric.',
+          'Here are the reports you have access to.\nThese reports come from multiple analytics platforms connected through Report Hub.',
           'reports_list',
           { reports: allReports.slice(0, 7), showActions: true }
         );
@@ -5086,7 +5124,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                     </div>
                     <div className="flex-1">
                       <h4 className="text-[14px] font-semibold text-[#111827] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
-                        Generated using BI Fabric (Open Source)
+                        Generated using Report Hub (Open Source)
                       </h4>
                       <p className="text-[11px] text-[#6B7280] mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
                         This report can be handled efficiently without enterprise BI tools.
@@ -5103,7 +5141,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                         </li>
                         <li className="flex items-center gap-2 text-[11px] text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>
                           <CheckCircle2 className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
-                          Consistent experience within BI Fabric
+                          Consistent experience within Report Hub
                         </li>
                       </ul>
                     </div>
@@ -5247,7 +5285,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                   {selectedExecutionPath === 'open_source' && (
                     <button
                       onClick={() => {
-                        addUserMessage('Proceed with BI Fabric (Open Source)');
+                        addUserMessage('Proceed with Report Hub (Open Source)');
                         setIsGenerating(true);
                         
                         setTimeout(() => {
@@ -5268,7 +5306,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                               'report_ready_cta',
                               {
                                 reportName: reportName,
-                                platform: 'BI Fabric',
+                                platform: 'Report Hub',
                                 executionPath: 'open_source',
                                 status: 'Published'
                               }
@@ -5514,7 +5552,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                             Create a new report in the destination
                           </h4>
                           <p className="text-[12px] text-[#6B7280] leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
-                            Start fresh using governed data and certified metrics in BI Fabric.
+                            Start fresh using governed data and certified metrics in Report Hub.
                           </p>
                         </div>
                       </div>
@@ -5575,7 +5613,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                       onClick={() => {
                         // Show migration overview information
                         addAssistantMessage(
-                          '## Migration Overview\n\n**What is migration?**\nMigration helps you move datasets and reports from legacy BI platforms to modern, governed platforms in BI Fabric.\n\n**Two migration paths:**\n\n1. **Create New Report** - Build a fresh report using certified data and metrics\n2. **Migrate Existing** - Rebuild an existing report while preserving business logic\n\n**Benefits:**\n• Reduced BI platform licensing costs\n• Improved data governance\n• Faster query performance\n• Centralized metric definitions',
+                          '## Migration Overview\n\n**What is migration?**\nMigration helps you move datasets and reports from legacy BI platforms to modern, governed platforms in Report Hub.\n\n**Two migration paths:**\n\n1. **Create New Report** - Build a fresh report using certified data and metrics\n2. **Migrate Existing** - Rebuild an existing report while preserving business logic\n\n**Benefits:**\n• Reduced BI platform licensing costs\n• Improved data governance\n• Faster query performance\n• Centralized metric definitions',
                           'text'
                         );
                       }}
@@ -6026,11 +6064,11 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
             {message.renderType === 'inline_chart' && message.data && (
               <div>
                 <InlineChart
-                  chartType={message.data.chartType}
-                  title={message.data.title}
+                  chartType={chartRefinements[message.id]?.chartType as any || message.data.chartType}
+                  title={chartRefinements[message.id]?.title || message.data.title}
                   reportName={message.data.reportName}
                   datasetName={message.data.datasetName}
-                  data={message.data.data}
+                  data={chartRefinements[message.id]?.data || message.data.data}
                 />
 
                 {/* Add to Report Badge (persistent after confirmation) */}
@@ -6098,6 +6136,51 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                     <Plus className="w-3.5 h-3.5" />
                     Add to Report
                   </button>
+                )}
+
+                {/* Chart Refinement Input */}
+                <div className="mt-3 flex items-center gap-2">
+                  <div className="flex-1 relative">
+                    <input
+                      type="text"
+                      value={refinementInputs[message.id] || ''}
+                      onChange={(e) => setRefinementInputs(prev => ({ ...prev, [message.id]: e.target.value }))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && refinementInputs[message.id]?.trim()) {
+                          handleChartRefinement(message.id, refinementInputs[message.id], message.data);
+                        }
+                      }}
+                      placeholder="Refine this chart... (e.g., 'switch to bar chart', 'show only Q1')"
+                      className="w-full px-4 py-2.5 border border-[#E5E7EB] rounded-lg text-[12px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                      style={{ fontFamily: 'Inter, sans-serif' }}
+                    />
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (refinementInputs[message.id]?.trim()) {
+                        handleChartRefinement(message.id, refinementInputs[message.id], message.data);
+                      }
+                    }}
+                    disabled={!refinementInputs[message.id]?.trim()}
+                    className="px-4 py-2.5 bg-[#111827] hover:bg-[#0F172A] text-white rounded-lg text-[12px] font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    style={{ fontFamily: 'Inter, sans-serif' }}
+                  >
+                    Refine
+                  </button>
+                </div>
+                {chartRefinements[message.id] && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-[11px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      Chart refined
+                    </span>
+                    <button
+                      onClick={() => setChartRefinements(prev => { const next = {...prev}; delete next[message.id]; return next; })}
+                      className="text-[11px] text-blue-600 hover:text-blue-800 underline"
+                      style={{ fontFamily: 'Inter, sans-serif' }}
+                    >
+                      Reset to original
+                    </button>
+                  </div>
                 )}
               </div>
             )}

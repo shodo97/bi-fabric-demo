@@ -548,7 +548,7 @@ export function FullReportPage() {
               style={{ fontFamily: 'Inter, sans-serif' }}
             >
               <Home className="w-4 h-4" />
-              Return to BI Fabric
+              Return to Report Hub
             </button>
           </div>
         </div>
@@ -716,7 +716,7 @@ export function FullReportPage() {
         <div className="mt-6 bg-white rounded-lg border border-[#E5E7EB] p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="text-[11px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
-              Powered by <span className="font-semibold text-[#111827]">BI Fabric</span> · Data-Driven · Connected Model
+              Powered by <span className="font-semibold text-[#111827]">Report Hub</span> · Data-Driven · Connected Model
             </div>
             <div className="flex gap-3">
               <button

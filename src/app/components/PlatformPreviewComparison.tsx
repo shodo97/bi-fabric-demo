@@ -16,7 +16,7 @@ export const PlatformPreviewComparison: React.FC<PlatformPreviewComparisonProps>
   msgId, 
   reportName, 
   sourcePlatform, 
-  destinationPlatform = 'BI Fabric',
+  destinationPlatform = 'Report Hub',
   onContinue, 
   onBack 
 }) => {
@@ -29,7 +29,7 @@ export const PlatformPreviewComparison: React.FC<PlatformPreviewComparisonProps>
       'looker': 'Looker',
       'qlik': 'Qlik',
       'powerbi': 'Power BI',
-      'bifabric': 'BI Fabric'
+      'bifabric': 'Report Hub'
     };
     return platformMap[platform.toLowerCase()] || platform;
   };
@@ -162,7 +162,7 @@ export const PlatformPreviewComparison: React.FC<PlatformPreviewComparisonProps>
 
               {/* Data Preservation Label */}
               <div className="text-[9px] text-[#6B7280] text-center mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                Data preserved via BI Fabric migration model
+                Data preserved via Report Hub migration model
               </div>
             </div>
 
@@ -244,7 +244,7 @@ export const PlatformPreviewComparison: React.FC<PlatformPreviewComparisonProps>
 
               {/* Data Preservation Label */}
               <div className="text-[9px] text-[#6B7280] text-center mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                Data preserved via BI Fabric migration model
+                Data preserved via Report Hub migration model
               </div>
             </div>
           </div>

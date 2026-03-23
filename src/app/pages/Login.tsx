@@ -21,7 +21,7 @@ export function LoginPage() {
         <div className="flex flex-col items-center mb-6">
           <div className="w-3 h-3 rounded-full bg-[#E11D48] mb-3" />
           <div className="text-[18px] font-semibold text-[#111827] tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
-            BI Fabric
+            Report Hub
           </div>
           <div className="text-[13px] text-[#6B7280] mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>
             Single Pane of Glass for Analytics
@@ -31,7 +31,7 @@ export function LoginPage() {
         {/* 2) Welcome Message */}
         <div className="mb-6 text-center">
           <h1 className="text-[21px] font-semibold text-[#111827] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Welcome to BI Fabric
+            Welcome to Report Hub
           </h1>
           <p className="text-[13px] text-[#6B7280] leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
             Access insights, reports, and analytics across platforms through one unified experience.
@@ -86,7 +86,7 @@ export function LoginPage() {
         {/* 4) Value Callout */}
         <div className="mb-6 bg-[#EFF6FF] rounded-[8px] p-4">
           <div className="text-[12px] font-semibold text-[#111827] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-            What BI Fabric enables
+            What Report Hub enables
           </div>
           <ul className="space-y-1.5 text-[12px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
             <li className="flex items-start">

@@ -88,7 +88,7 @@ function IntentSelectionUI({ msgId, msgContent, onIntentSelect, onViewOverview }
                   Migrate an existing report
                 </h4>
                 <p className="text-[12px] text-[#6B7280] leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
-                  Select the source platform, choose the report, then migrate it into BI Fabric.
+                  Select the source platform, choose the report, then migrate it into Report Hub.
                 </p>
               </div>
             </div>
@@ -132,7 +132,7 @@ function SourcePlatformSelectionUI({ msgId, onContinue }: SourcePlatformSelectio
     { id: 'tableau' as const, name: 'Tableau', subtitle: 'Source system' },
     { id: 'qlik' as const, name: 'Qlik', subtitle: 'Source system' },
     { id: 'looker' as const, name: 'Looker', subtitle: 'Source system' },
-    { id: 'bifabric' as const, name: 'BI Fabric', subtitle: 'Source system' },
+    { id: 'bifabric' as const, name: 'Report Hub', subtitle: 'Source system' },
   ];
 
   return (
@@ -216,7 +216,7 @@ function ReportSelectionUI({ msgId, sourcePlatform, onContinue, onReportSelect }
     tableau: 'Tableau',
     powerbi: 'Power BI',
     qlik: 'Qlik',
-    bifabric: 'BI Fabric'
+    bifabric: 'Report Hub'
   };
 
   // Mock report data based on source platform
@@ -445,13 +445,13 @@ function DestinationPlatformSelectionUI({
     tableau: 'Tableau',
     powerbi: 'Power BI',
     qlik: 'Qlik',
-    bifabric: 'BI Fabric'
+    bifabric: 'Report Hub'
   };
 
   const destinationOptions = [
     {
       id: 'bifabric' as const,
-      name: 'BI Fabric',
+      name: 'Report Hub',
       subtitle: 'Unified reporting experience',
       helperText: 'Default destination. Optimized automatically during migration.',
       recommended: true
@@ -485,7 +485,7 @@ function DestinationPlatformSelectionUI({
           Choose where this report should live after migration.
         </div>
         <div className="text-[13px] text-[#111827]">
-          BI Fabric is the recommended destination. Other platforms are supported if needed.
+          Report Hub is the recommended destination. Other platforms are supported if needed.
         </div>
       </div>
 
@@ -942,7 +942,7 @@ function VisualConfigurationUI({ msgId, reportName, sourcePlatform = 'tableau', 
               className="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-2 focus:ring-blue-500 cursor-pointer"
             />
             <label htmlFor={`${msgId}-theme`} className="text-[13px] text-[#111827] cursor-pointer" style={{ fontFamily: 'Inter, sans-serif' }}>
-              Use standard BI Fabric color theme
+              Use standard Report Hub color theme
             </label>
           </div>
         </div>
@@ -982,13 +982,13 @@ function MigrationExecutionUI({ msgId, sourcePlatform, destinationPlatform, repo
     powerbi: 'Power BI',
     qlik: 'Qlik',
     looker: 'Looker',
-    bifabric: 'BI Fabric'
+    bifabric: 'Report Hub'
   };
 
   const migrationSteps = [
     { id: 1, label: 'Preparing migration' },
     { id: 2, label: 'Extracting report structure' },
-    { id: 3, label: 'Migrating report to BI Fabric' },
+    { id: 3, label: 'Migrating report to Report Hub' },
     { id: 4, label: 'Finalizing report' }
   ];
 
@@ -1041,7 +1041,7 @@ function MigrationExecutionUI({ msgId, sourcePlatform, destinationPlatform, repo
             Ready to run the migration.
           </div>
           <div className="text-[13px] text-[#111827]">
-            This will migrate the selected report into BI Fabric. The process runs in the background and does not disrupt existing users.
+            This will migrate the selected report into Report Hub. The process runs in the background and does not disrupt existing users.
           </div>
         </div>
 
@@ -1231,7 +1231,7 @@ function MigrationCompletionUI({ msgId, sourcePlatform, reportName }: MigrationC
     powerbi: 'Power BI',
     qlik: 'Qlik',
     looker: 'Looker',
-    bifabric: 'BI Fabric'
+    bifabric: 'Report Hub'
   };
 
   return (
@@ -1253,7 +1253,7 @@ function MigrationCompletionUI({ msgId, sourcePlatform, reportName }: MigrationC
               Migration completed successfully.
             </div>
             <div className="text-[13px] text-green-900">
-              The report has been migrated to BI Fabric and is now available in the unified reports experience. No changes were required from you.
+              The report has been migrated to Report Hub and is now available in the unified reports experience. No changes were required from you.
             </div>
           </div>
         </div>
@@ -1290,7 +1290,7 @@ function MigrationCompletionUI({ msgId, sourcePlatform, reportName }: MigrationC
               Destination:
             </span>
             <span className="text-[13px] text-[#111827] font-medium" style={{ fontFamily: 'Inter, sans-serif' }}>
-              BI Fabric
+              Report Hub
             </span>
           </div>
 
@@ -1383,7 +1383,7 @@ function DataSourceSelectionUI({ msgId, onContinue, onLearnMore }: DataSourceSel
           Next, choose the data source for rebuilding this report.
         </div>
         <div className="text-[13px] text-[#111827]">
-          Using governed data helps ensure consistency, reuse, and trusted definitions across BI Fabric.
+          Using governed data helps ensure consistency, reuse, and trusted definitions across Report Hub.
         </div>
       </div>
 
@@ -1717,7 +1717,7 @@ function ExecutionRoutingUI({ msgId, decision, metrics, dimensions, onContinue, 
           Here's how this report will be generated.
         </div>
         <div className="text-[13px] text-[#111827]">
-          BI Fabric automatically routes reports to the most cost-effective execution engine.
+          Report Hub automatically routes reports to the most cost-effective execution engine.
         </div>
       </div>
       <button
@@ -1747,7 +1747,7 @@ function ReportReuseDetectionUI({ msgId, onContinue, onViewComparison }: ReportR
       title: 'Customer Churn – Executive Overview',
       status: 'Active',
       statusColor: 'green',
-      backend: 'BI Fabric (Open-source)',
+      backend: 'Report Hub (Open-source)',
       usage: 'Used by 42 users • 1,200 views/month',
       owner: 'Customer Analytics COE',
       lastUpdated: '5 days ago',
@@ -1774,7 +1774,7 @@ function ReportReuseDetectionUI({ msgId, onContinue, onViewComparison }: ReportR
           I'm checking for similar reports.
         </div>
         <div className="text-[13px] text-[#111827]">
-          To reduce duplication and licensing cost, BI Fabric looks for existing reports that use the same governed metrics and dimensions.
+          To reduce duplication and licensing cost, Report Hub looks for existing reports that use the same governed metrics and dimensions.
         </div>
       </div>
 
@@ -2029,7 +2029,7 @@ function MigrationPlanValidationUI({
           Here&apos;s the migration plan and readiness check.
         </div>
         <div className="text-[13px] text-[#111827]">
-          Before executing the migration, BI Fabric validates compatibility, highlights risks, and confirms readiness.
+          Before executing the migration, Report Hub validates compatibility, highlights risks, and confirms readiness.
         </div>
       </div>
 
@@ -2046,7 +2046,7 @@ function MigrationPlanValidationUI({
           </div>
           <div className="flex items-start gap-2">
             <span className="text-[12px] font-medium text-[#6B7280] min-w-[150px]">Destination:</span>
-            <span className="text-[12px] text-[#111827]">BI Fabric (Open-source execution)</span>
+            <span className="text-[12px] text-[#111827]">Report Hub (Open-source execution)</span>
           </div>
           <div className="flex items-start gap-2">
             <span className="text-[12px] font-medium text-[#6B7280] min-w-[150px]">Action:</span>
@@ -2232,7 +2232,7 @@ function FinalValidationReadinessUI({
           </li>
           <li className="flex items-start gap-2">
             <span className="text-blue-600 mt-0.5">•</span>
-            <span>Users will be automatically routed through BI Fabric</span>
+            <span>Users will be automatically routed through Report Hub</span>
           </li>
         </ul>
       </div>
@@ -2304,7 +2304,7 @@ function MigrationExecutionProgressUI({
       status: 'completed' 
     },
     { 
-      name: 'Generating report using BI Fabric execution engine', 
+      name: 'Generating report using Report Hub execution engine', 
       status: 'in_progress' 
     },
     { 
@@ -2312,7 +2312,7 @@ function MigrationExecutionProgressUI({
       status: 'pending' 
     },
     { 
-      name: 'Publishing report to BI Fabric', 
+      name: 'Publishing report to Report Hub', 
       status: 'pending' 
     },
   ];
@@ -2392,7 +2392,7 @@ function MigrationExecutionProgressUI({
       {/* Safety Reassurance Callout */}
       <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-4 max-w-[90%]" style={{ fontFamily: 'Inter, sans-serif' }}>
         <p className="text-[13px] text-[#111827]">
-          Existing Tableau reports remain available during migration. If an issue is detected, BI Fabric can roll back safely.
+          Existing Tableau reports remain available during migration. If an issue is detected, Report Hub can roll back safely.
         </p>
       </div>
 
@@ -2463,7 +2463,7 @@ function MigrationCompletionSuccessUI({
               Migration completed successfully.
             </div>
             <div className="text-[13px] text-[#111827]">
-              <strong>Customer Churn Overview</strong> is now available through BI Fabric. Users will access it through a single, consistent experience, regardless of the underlying execution engine.
+              <strong>Customer Churn Overview</strong> is now available through Report Hub. Users will access it through a single, consistent experience, regardless of the underlying execution engine.
             </div>
           </div>
         </div>
@@ -2484,7 +2484,7 @@ function MigrationCompletionSuccessUI({
           
           <div className="flex items-start">
             <span className="text-[13px] text-[#6B7280] w-[180px] flex-shrink-0">Execution path:</span>
-            <span className="text-[13px] text-[#111827] font-medium">BI Fabric (Open-source)</span>
+            <span className="text-[13px] text-[#111827] font-medium">Report Hub (Open-source)</span>
           </div>
           
           <div className="flex items-start">
@@ -2596,7 +2596,7 @@ function CreateNewDataSourceSelectionUI({
           Let's create a new report using governed data.
         </div>
         <div className="text-[13px] text-[#111827]">
-          New reports in BI Fabric start with certified data products, so metrics are consistent and reusable from day one.
+          New reports in Report Hub start with certified data products, so metrics are consistent and reusable from day one.
         </div>
       </div>
 
@@ -2727,7 +2727,7 @@ function CreateNewVDMConfirmationUI({
           We'll build this report using governed data.
         </div>
         <div className="text-[13px] text-[#111827]">
-          New reports in BI Fabric start with Virtual Data Marketplace, so metrics are certified and reusable from day one.
+          New reports in Report Hub start with Virtual Data Marketplace, so metrics are certified and reusable from day one.
         </div>
       </div>
 
@@ -2796,7 +2796,7 @@ function CreateNewUsageExpectationsUI({
           How will this report be used?
         </div>
         <div className="text-[13px] text-[#111827]">
-          This helps BI Fabric choose the most cost-effective execution path.
+          This helps Report Hub choose the most cost-effective execution path.
         </div>
       </div>
 
@@ -2910,7 +2910,7 @@ function CreateNewUsageExpectationsUI({
         {/* Helper Text */}
         <div className="mt-4 p-3 bg-blue-50 rounded-lg">
           <p className="text-[11px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
-            This helps BI Fabric choose the most cost-effective execution path.
+            This helps Report Hub choose the most cost-effective execution path.
           </p>
         </div>
       </div>
@@ -2951,7 +2951,7 @@ function CreateNewExecutionRoutingUI({
           Report execution path
         </div>
         <div className="text-[13px] text-[#111827]">
-          Based on your usage expectations, BI Fabric will determine the best execution platform.
+          Based on your usage expectations, Report Hub will determine the best execution platform.
         </div>
       </div>
 
@@ -2966,7 +2966,7 @@ function CreateNewExecutionRoutingUI({
 
           <div className="flex-1">
             <h4 className="text-[14px] font-semibold text-[#111827] mb-1">
-              BI Fabric Open-Source Engine
+              Report Hub Open-Source Engine
             </h4>
             <p className="text-[12px] text-[#6B7280] mb-3">
               Default execution path for this report
@@ -2987,7 +2987,7 @@ function CreateNewExecutionRoutingUI({
               <div className="flex items-start gap-2">
                 <Info className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                 <p className="text-[11px] text-[#111827]">
-                  This report will use BI Fabric's open-source engine, avoiding enterprise BI licensing fees.
+                  This report will use Report Hub's open-source engine, avoiding enterprise BI licensing fees.
                 </p>
               </div>
             </div>
@@ -3037,7 +3037,7 @@ function CreateNewExecutionRoutingUI({
         <div className="flex items-start gap-2">
           <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
           <p className="text-[12px] text-[#111827]">
-            <strong>New reports never start in Tableau.</strong> All new work uses governed data and BI Fabric execution routing.
+            <strong>New reports never start in Tableau.</strong> All new work uses governed data and Report Hub execution routing.
           </p>
         </div>
       </div>
@@ -3489,7 +3489,7 @@ export function TalkMigrationPage() {
             setTimeout(() => {
               setIsGenerating(false);
               addAssistantMessage(
-                '## Migration Overview\n\n**What is migration?**\nMigration helps you move datasets and reports from legacy BI platforms to modern, governed platforms in BI Fabric.\n\n**Two migration paths:**\n\n1. **Create New Report** - Build a fresh report using certified data and metrics\n2. **Migrate Existing** - Rebuild an existing report while preserving business logic\n\n**Benefits:**\n• Reduced BI platform licensing costs\n• Improved data governance\n• Faster query performance\n• Centralized metric definitions',
+                '## Migration Overview\n\n**What is migration?**\nMigration helps you move datasets and reports from legacy BI platforms to modern, governed platforms in Report Hub.\n\n**Two migration paths:**\n\n1. **Create New Report** - Build a fresh report using certified data and metrics\n2. **Migrate Existing** - Rebuild an existing report while preserving business logic\n\n**Benefits:**\n• Reduced BI platform licensing costs\n• Improved data governance\n• Faster query performance\n• Centralized metric definitions',
                 'text'
               );
             }, 800);
@@ -3508,7 +3508,7 @@ export function TalkMigrationPage() {
             const platformNames = {
               tableau: 'Tableau',
               qlik: 'Qlik',
-              bifabric: 'BI Fabric'
+              bifabric: 'Report Hub'
             };
             
             const userMsg: Message = {
@@ -3601,7 +3601,7 @@ export function TalkMigrationPage() {
           }}
           onContinue={(destinationPlatform) => {
             const platformNames = {
-              bifabric: 'BI Fabric',
+              bifabric: 'Report Hub',
               qlik: 'Qlik',
               looker: 'Looker'
             };
@@ -3880,7 +3880,7 @@ export function TalkMigrationPage() {
         <div key={msg.id} className="mb-6">
           <div className="bg-gray-50 px-4 py-3 rounded-xl mb-4 max-w-[80%]" style={{ fontFamily: 'Inter, sans-serif' }}>
             <p className="text-[13px] text-[#111827] mb-3">
-              Got it — I'll help you migrate <strong>{assetName}</strong> into the BI Fabric ecosystem.
+              Got it — I'll help you migrate <strong>{assetName}</strong> into the Report Hub ecosystem.
             </p>
             <p className="text-[13px] text-[#111827] mb-1">
               Before we begin, I'll confirm your intent and preferred destination path.
@@ -4023,7 +4023,7 @@ export function TalkMigrationPage() {
                   DESTINATION (Preference order)
                 </div>
                 <div className="space-y-3">
-                  {/* Option 1: BI Fabric */}
+                  {/* Option 1: Report Hub */}
                   <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
                     <div className="flex items-start gap-2 mb-2">
                       <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-bold flex-shrink-0">
@@ -4031,13 +4031,13 @@ export function TalkMigrationPage() {
                       </span>
                       <div className="flex-1">
                         <h4 className="text-[14px] font-semibold text-[#111827] mb-0.5">
-                          Verizon BI Fabric
+                          Verizon Report Hub
                         </h4>
                         <p className="text-[11px] text-[#6B7280] font-medium mb-2">
                           Default destination
                         </p>
                         <p className="text-[11px] text-[#6B7280] leading-relaxed">
-                          Most reports are generated using BI Fabric's open-source engine.
+                          Most reports are generated using Report Hub's open-source engine.
                         </p>
                       </div>
                     </div>
@@ -4092,7 +4092,7 @@ export function TalkMigrationPage() {
             <div className="flex items-start gap-2">
               <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
               <p className="text-[12px] text-[#111827] leading-relaxed">
-                BI Fabric determines the final execution platform based on usage, complexity, and cost — not by default tool selection.
+                Report Hub determines the final execution platform based on usage, complexity, and cost — not by default tool selection.
               </p>
             </div>
           </div>
@@ -4131,7 +4131,7 @@ export function TalkMigrationPage() {
                 const userMsg: Message = {
                   id: `msg-${Date.now()}`,
                   type: 'user',
-                  content: 'Why BI Fabric is the default destination',
+                  content: 'Why Report Hub is the default destination',
                   timestamp: new Date(),
                 };
                 setMessages(prev => [...prev, userMsg]);
@@ -4139,7 +4139,7 @@ export function TalkMigrationPage() {
                 setTimeout(() => {
                   setIsGenerating(false);
                   addAssistantMessage(
-                    'BI Fabric is the default destination because:\n\n• **Cost Efficiency**: Open-source engine reduces licensing costs\n• **Data Governance**: Built-in integration with Virtual Data Marketplace\n• **Performance**: Optimized for standard reporting and dashboards\n• **Scalability**: Handles most business intelligence use cases\n\nEnterprise BI platforms (Qlik, Looker) are reserved for specialized capabilities like advanced analytics, real-time data, or complex associative models.',
+                    'Report Hub is the default destination because:\n\n• **Cost Efficiency**: Open-source engine reduces licensing costs\n• **Data Governance**: Built-in integration with Virtual Data Marketplace\n• **Performance**: Optimized for standard reporting and dashboards\n• **Scalability**: Handles most business intelligence use cases\n\nEnterprise BI platforms (Qlik, Looker) are reserved for specialized capabilities like advanced analytics, real-time data, or complex associative models.',
                     'text'
                   );
                 }, 800);
@@ -4147,7 +4147,7 @@ export function TalkMigrationPage() {
               className="text-[#6B7280] hover:text-[#111827] text-[13px] font-medium transition-colors underline self-start"
               style={{ fontFamily: 'Inter, sans-serif' }}
             >
-              Why BI Fabric is the default destination
+              Why Report Hub is the default destination
             </button>
           </div>
         </div>
@@ -4270,7 +4270,7 @@ export function TalkMigrationPage() {
             setTimeout(() => {
               setIsGenerating(false);
               addAssistantMessage(
-                'Virtual Data Marketplace is recommended because:\n\n• **Semantic Layer**: Provides a unified view of certified metrics and dimensions\n• **Data Governance**: All data products are certified, documented, and maintained by data stewards\n• **Reusability**: Metrics are pre-calculated and shared across teams, reducing duplication\n• **Trust**: Definitions are approved by domain experts and business stakeholders\n• **Performance**: Optimized data products with caching and query acceleration\n• **Lineage**: Full visibility into data sources, transformations, and consumption\n\nUsing VDM ensures your migrated report uses the same trusted definitions as other BI Fabric reports.',
+                'Virtual Data Marketplace is recommended because:\n\n• **Semantic Layer**: Provides a unified view of certified metrics and dimensions\n• **Data Governance**: All data products are certified, documented, and maintained by data stewards\n• **Reusability**: Metrics are pre-calculated and shared across teams, reducing duplication\n• **Trust**: Definitions are approved by domain experts and business stakeholders\n• **Performance**: Optimized data products with caching and query acceleration\n• **Lineage**: Full visibility into data sources, transformations, and consumption\n\nUsing VDM ensures your migrated report uses the same trusted definitions as other Report Hub reports.',
                 'text'
               );
             }, 800);
@@ -4427,7 +4427,7 @@ export function TalkMigrationPage() {
             setTimeout(() => {
               setIsGenerating(false);
               addAssistantMessage(
-                `**How BI Fabric Makes Routing Decisions**\n\n**Automatic Analysis:**\nBI Fabric analyzes your report requirements including:\n• Visualization complexity (maps, custom charts, etc.)\n• Expected concurrent users\n• Calculation complexity\n• Data volume and refresh requirements\n\n**Default Path (Open-Source):**\n✓ Standard tables, bar charts, line charts, pie charts\n✓ Basic filters and parameters\n✓ PDF/PPT export\n✓ Scheduled email delivery\n✓ Up to ~100 concurrent users\n\n**Enterprise BI Path (Looker, Qlik, Tableau):**\nOnly triggered when you need:\n• Advanced geospatial mapping\n• Complex custom calculations beyond SQL\n• 100+ concurrent users\n• Platform-specific visualizations\n\n**Cost Control:**\nThe system always recommends the open-source path first. Enterprise BI is only suggested when capabilities genuinely require it, with explicit cost warnings.\n\n**Your Report:**\nCustomer Churn Rate with standard dimensions → Perfect fit for open-source execution.`,
+                `**How Report Hub Makes Routing Decisions**\n\n**Automatic Analysis:**\nReport Hub analyzes your report requirements including:\n• Visualization complexity (maps, custom charts, etc.)\n• Expected concurrent users\n• Calculation complexity\n• Data volume and refresh requirements\n\n**Default Path (Open-Source):**\n✓ Standard tables, bar charts, line charts, pie charts\n✓ Basic filters and parameters\n✓ PDF/PPT export\n✓ Scheduled email delivery\n✓ Up to ~100 concurrent users\n\n**Enterprise BI Path (Looker, Qlik, Tableau):**\nOnly triggered when you need:\n• Advanced geospatial mapping\n• Complex custom calculations beyond SQL\n• 100+ concurrent users\n• Platform-specific visualizations\n\n**Cost Control:**\nThe system always recommends the open-source path first. Enterprise BI is only suggested when capabilities genuinely require it, with explicit cost warnings.\n\n**Your Report:**\nCustomer Churn Rate with standard dimensions → Perfect fit for open-source execution.`,
                 'text'
               );
             }, 800);
@@ -4501,7 +4501,7 @@ export function TalkMigrationPage() {
             setTimeout(() => {
               setIsGenerating(false);
               addAssistantMessage(
-                '**How BI Fabric Determines Execution Routing**\\n\\n**Automatic Analysis:**\\nBI Fabric evaluates your report based on:\\n• Usage expectations (audience, users, views)\\n• Data complexity and volume\\n• Visualization requirements\\n• Performance needs\\n\\n**Default: Open-Source Engine**\\nMost reports execute on BI Fabric\'s open-source engine, which handles:\\n✓ Standard visualizations (charts, tables, filters)\\n✓ Governed metrics and dimensions\\n✓ Scheduled refreshes and email delivery\\n✓ Up to ~100 concurrent users\\n✓ **No additional licensing cost**\\n\\n**Enterprise BI Platforms (Qlik, Looker)**\\nOnly used when advanced capabilities are required:\\n• Complex associative models\\n• Advanced geospatial mapping\\n• High concurrency (100+ users)\\n• Platform-specific features\\n\\n**For Your Report:**\\nBased on your usage expectations, BI Fabric will use the open-source engine, keeping costs low while meeting all requirements.\\n\\n**Important:** New reports never start in Tableau or other legacy BI tools.',
+                '**How Report Hub Determines Execution Routing**\\n\\n**Automatic Analysis:**\\nReport Hub evaluates your report based on:\\n• Usage expectations (audience, users, views)\\n• Data complexity and volume\\n• Visualization requirements\\n• Performance needs\\n\\n**Default: Open-Source Engine**\\nMost reports execute on Report Hub\'s open-source engine, which handles:\\n✓ Standard visualizations (charts, tables, filters)\\n✓ Governed metrics and dimensions\\n✓ Scheduled refreshes and email delivery\\n✓ Up to ~100 concurrent users\\n✓ **No additional licensing cost**\\n\\n**Enterprise BI Platforms (Qlik, Looker)**\\nOnly used when advanced capabilities are required:\\n• Complex associative models\\n• Advanced geospatial mapping\\n• High concurrency (100+ users)\\n• Platform-specific features\\n\\n**For Your Report:**\\nBased on your usage expectations, Report Hub will use the open-source engine, keeping costs low while meeting all requirements.\\n\\n**Important:** New reports never start in Tableau or other legacy BI tools.',
                 'text'
               );
             }, 800);
@@ -4550,7 +4550,7 @@ export function TalkMigrationPage() {
             setTimeout(() => {
               setIsGenerating(false);
               addAssistantMessage(
-                `**Migration Plan Details**\n\n**Data Flow:**\n• Source: Tableau report "Customer Churn Overview"\n• Data retrieval: Virtual Data Marketplace (governed catalog)\n• Transformation: BI Fabric semantic layer\n• Output: Open-source execution engine\n\n**Technical Specifications:**\n• Query optimization: Enabled\n• Caching strategy: Intelligent (based on data freshness)\n• Security: Row-level security inherited from VDM\n• Performance: Sub-second response for standard queries\n\n**Compatibility Notes:**\n✓ All metrics use standard SQL aggregations\n✓ Filters compatible with BI Fabric UI\n✓ Export formats: PDF, PPT, Excel, CSV\n✓ Scheduling: Supports all standard cadences\n\n**Rollback Plan:**\nIf issues occur, the original Tableau report remains unchanged and accessible. Migration can be reversed without data loss.\n\nReady to proceed?`,
+                `**Migration Plan Details**\n\n**Data Flow:**\n• Source: Tableau report "Customer Churn Overview"\n• Data retrieval: Virtual Data Marketplace (governed catalog)\n• Transformation: Report Hub semantic layer\n• Output: Open-source execution engine\n\n**Technical Specifications:**\n• Query optimization: Enabled\n• Caching strategy: Intelligent (based on data freshness)\n• Security: Row-level security inherited from VDM\n• Performance: Sub-second response for standard queries\n\n**Compatibility Notes:**\n✓ All metrics use standard SQL aggregations\n✓ Filters compatible with Report Hub UI\n✓ Export formats: PDF, PPT, Excel, CSV\n✓ Scheduling: Supports all standard cadences\n\n**Rollback Plan:**\nIf issues occur, the original Tableau report remains unchanged and accessible. Migration can be reversed without data loss.\n\nReady to proceed?`,
                 'text'
               );
             }, 800);
@@ -4677,7 +4677,7 @@ export function TalkMigrationPage() {
             setTimeout(() => {
               setIsGenerating(false);
               addAssistantMessage(
-                `**Opening Customer Churn Overview**\n\nThe report is now loading in BI Fabric's unified viewer.\n\n**What you'll see:**\n• Clean, consistent UI matching BI Fabric design system\n• All original visualizations and metrics\n• Interactive filters (Customer Segment, Brand, Geography, Time Period)\n• Export options (PDF, PPT, Excel, CSV)\n• Sharing and collaboration features\n\n**Behind the scenes:**\n✓ Data sourced from Virtual Data Marketplace\n✓ Executed via open-source engine\n✓ Governed metric definitions applied\n✓ Row-level security enforced\n\nUsers won't know this was originally a Tableau report—they'll just see it as "Customer Churn Overview" in their BI Fabric catalog.`,
+                `**Opening Customer Churn Overview**\n\nThe report is now loading in Report Hub's unified viewer.\n\n**What you'll see:**\n• Clean, consistent UI matching Report Hub design system\n• All original visualizations and metrics\n• Interactive filters (Customer Segment, Brand, Geography, Time Period)\n• Export options (PDF, PPT, Excel, CSV)\n• Sharing and collaboration features\n\n**Behind the scenes:**\n✓ Data sourced from Virtual Data Marketplace\n✓ Executed via open-source engine\n✓ Governed metric definitions applied\n✓ Row-level security enforced\n\nUsers won't know this was originally a Tableau report—they'll just see it as "Customer Churn Overview" in their Report Hub catalog.`,
                 'text'
               );
             }, 800);
@@ -4694,7 +4694,7 @@ export function TalkMigrationPage() {
             setTimeout(() => {
               setIsGenerating(false);
               addAssistantMessage(
-                `**Usage & Adoption Analytics**\n\n**Customer Churn Overview - Usage Dashboard**\n\n**Post-Migration Activity (Last 7 days):**\n• Unique viewers: 24 users\n• Total views: 87\n• Average session duration: 4m 32s\n• Export actions: 12 (PDF: 7, Excel: 5)\n• Filters applied: 156 interactions\n\n**Adoption Trends:**\n📈 +35% increase in views vs. pre-migration baseline\n📈 +18% new users discovered report via BI Fabric search\n⏱️ -22% reduction in time-to-insight (faster loading)\n\n**User Feedback:**\n✓ 89% positive sentiment\n✓ "Easier to find and use" - 15 comments\n✓ "Faster than before" - 8 comments\n\n**Recommendation:**\nUsage is strong and adoption exceeds pre-migration levels. The legacy Tableau report can be safely archived after a 30-day observation period.`,
+                `**Usage & Adoption Analytics**\n\n**Customer Churn Overview - Usage Dashboard**\n\n**Post-Migration Activity (Last 7 days):**\n• Unique viewers: 24 users\n• Total views: 87\n• Average session duration: 4m 32s\n• Export actions: 12 (PDF: 7, Excel: 5)\n• Filters applied: 156 interactions\n\n**Adoption Trends:**\n📈 +35% increase in views vs. pre-migration baseline\n📈 +18% new users discovered report via Report Hub search\n⏱️ -22% reduction in time-to-insight (faster loading)\n\n**User Feedback:**\n✓ 89% positive sentiment\n✓ "Easier to find and use" - 15 comments\n✓ "Faster than before" - 8 comments\n\n**Recommendation:**\nUsage is strong and adoption exceeds pre-migration levels. The legacy Tableau report can be safely archived after a 30-day observation period.`,
                 'text'
               );
             }, 800);
@@ -4711,7 +4711,7 @@ export function TalkMigrationPage() {
             setTimeout(() => {
               setIsGenerating(false);
               addAssistantMessage(
-                `**Migration Summary Export**\n\n**Report:** Customer Churn Overview\n**Migration Date:** ${new Date().toLocaleDateString()}\n**Completed By:** BI Fabric Migration Assistant\n\n**Migration Path:**\n• Source Platform: Tableau\n• Destination: BI Fabric (Open-source execution)\n• Data Source: Virtual Data Marketplace\n• Governance: Enabled (governed metrics & dimensions)\n\n**Technical Details:**\n• Metrics Migrated: Customer Churn Rate\n• Dimensions Migrated: Customer Segment, Brand, Geography, Time Period\n• Filters: 4 interactive filters preserved\n• Visualizations: All charts and tables migrated\n• Row-level Security: Inherited from VDM\n• Performance: Sub-second query response\n\n**Business Impact:**\n• User Disruption: None\n• License Cost Savings: ~$70/month (after legacy archival)\n• Usage Improvement: +35% post-migration\n• Time-to-Insight: -22% faster\n\n**Next Steps:**\n1. Monitor usage for 30 days\n2. Archive legacy Tableau report\n3. Train users on BI Fabric features\n4. Consider migrating related reports\n\n**Status:** ✓ Completed Successfully\n\n📥 **Download Options:**\n• PDF summary (formatted)\n• CSV data export\n• JSON metadata`,
+                `**Migration Summary Export**\n\n**Report:** Customer Churn Overview\n**Migration Date:** ${new Date().toLocaleDateString()}\n**Completed By:** Report Hub Migration Assistant\n\n**Migration Path:**\n• Source Platform: Tableau\n• Destination: Report Hub (Open-source execution)\n• Data Source: Virtual Data Marketplace\n• Governance: Enabled (governed metrics & dimensions)\n\n**Technical Details:**\n• Metrics Migrated: Customer Churn Rate\n• Dimensions Migrated: Customer Segment, Brand, Geography, Time Period\n• Filters: 4 interactive filters preserved\n• Visualizations: All charts and tables migrated\n• Row-level Security: Inherited from VDM\n• Performance: Sub-second query response\n\n**Business Impact:**\n• User Disruption: None\n• License Cost Savings: ~$70/month (after legacy archival)\n• Usage Improvement: +35% post-migration\n• Time-to-Insight: -22% faster\n\n**Next Steps:**\n1. Monitor usage for 30 days\n2. Archive legacy Tableau report\n3. Train users on Report Hub features\n4. Consider migrating related reports\n\n**Status:** ✓ Completed Successfully\n\n📥 **Download Options:**\n• PDF summary (formatted)\n• CSV data export\n• JSON metadata`,
                 'text'
               );
             }, 800);
@@ -4729,7 +4729,7 @@ export function TalkMigrationPage() {
               setIsGenerating(false);
               // Return to Step 1: Migration Initiated
               addAssistantMessage(
-                `Great! Let's migrate another report to BI Fabric.\n\nI'll guide you through the same structured process to ensure a smooth migration.`,
+                `Great! Let's migrate another report to Report Hub.\n\nI'll guide you through the same structured process to ensure a smooth migration.`,
                 'migration_initiated'
               );
             }, 800);
@@ -5013,14 +5013,14 @@ export function TalkMigrationPage() {
                       <span className="text-[#111827] font-medium">
                         {selectedReport.sourcePlatform === 'tableau' ? 'Tableau' : 
                          selectedReport.sourcePlatform === 'powerbi' ? 'Power BI' :
-                         selectedReport.sourcePlatform === 'qlik' ? 'Qlik' : 'BI Fabric'}
+                         selectedReport.sourcePlatform === 'qlik' ? 'Qlik' : 'Report Hub'}
                       </span>
                     </div>
                     {selectedReport.destinationPlatform && (
                       <div className="flex justify-between">
                         <span className="text-[#6B7280]">Destination:</span>
                         <span className="text-[#111827] font-medium">
-                          {selectedReport.destinationPlatform === 'bifabric' ? 'BI Fabric' : 
+                          {selectedReport.destinationPlatform === 'bifabric' ? 'Report Hub' : 
                            selectedReport.destinationPlatform === 'qlik' ? 'Qlik' : 
                            selectedReport.destinationPlatform === 'looker' ? 'Looker' : '—'}
                         </span>

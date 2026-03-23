@@ -33,7 +33,7 @@ export function SettingsPage() {
             Settings
           </h1>
           <p className="text-[13px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Preferences and access context for BI Fabric.
+            Preferences and access context for Report Hub.
           </p>
         </div>
         <div className="text-[11px] text-[#6B7280] bg-blue-50 px-3 py-1.5 rounded-md" style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -206,7 +206,7 @@ export function SettingsPage() {
 
         <div className="bg-[#F8F9FB] rounded-lg p-3 border border-[#E5E7EB]">
           <p className="text-[12px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Preferences apply across BI Fabric experiences.
+            Preferences apply across Report Hub experiences.
           </p>
         </div>
       </div>
@@ -390,7 +390,7 @@ export function SettingsPage() {
             </label>
             <div className="h-[40px] px-3 bg-gray-50 border border-[#E5E7EB] rounded-lg flex items-center">
               <p className="text-[13px] text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                BI Fabric Dummy Data Model
+                Report Hub Dummy Data Model
               </p>
             </div>
           </div>
@@ -420,7 +420,7 @@ export function SettingsPage() {
 
         <div className="bg-[#F8F9FB] rounded-lg p-3 border border-[#E5E7EB]">
           <p className="text-[12px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
-            BI Fabric abstracts underlying BI platforms.
+            Report Hub abstracts underlying BI platforms.
           </p>
         </div>
       </div>

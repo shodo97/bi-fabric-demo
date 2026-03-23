@@ -183,7 +183,7 @@ export function EnterpriseBIPage() {
             {/* Metadata */}
             <div className="mb-4 pb-4 border-b border-[#E5E7EB]">
               <p className="text-[11px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                Connected via BI Fabric
+                Connected via Report Hub
               </p>
               <p className="text-[10px] text-green-600 font-medium mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>
                 ✓ Up to date
@@ -211,7 +211,7 @@ export function EnterpriseBIPage() {
               Platform launchpad
             </h3>
             <p className="text-[12px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
-              Use this page to quickly access your connected enterprise BI platforms. All analytics and insights are available through BI Fabric conversational flows.
+              Use this page to quickly access your connected enterprise BI platforms. All analytics and insights are available through Report Hub conversational flows.
             </p>
           </div>
           <div className="flex gap-3">

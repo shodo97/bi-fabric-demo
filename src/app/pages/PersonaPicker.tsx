@@ -26,7 +26,7 @@ export function PersonaPickerPage() {
         <div className="flex flex-col items-center mb-8">
           <div className="w-3 h-3 rounded-full bg-[#E11D48] mb-3" />
           <div className="text-[18px] font-semibold text-[#111827] tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
-            BI Fabric
+            Report Hub
           </div>
         </div>
 
@@ -36,7 +36,7 @@ export function PersonaPickerPage() {
             Choose your experience
           </h1>
           <p className="text-[14px] text-[#6B7280] leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Select a persona to tailor your BI Fabric experience
+            Select a persona to tailor your Report Hub experience
           </p>
         </div>
 

@@ -137,7 +137,7 @@ export function GovernancePage() {
             {governanceMetrics.freshnessRate.toFixed(0)}%
           </div>
           <div className="text-[12px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Data timeliness across BI Fabric
+            Data timeliness across Report Hub
           </div>
         </button>
 
@@ -232,7 +232,7 @@ export function GovernancePage() {
 
         <div className="bg-[#F8F9FB] rounded-lg p-3 border border-[#E5E7EB]">
           <p className="text-[12px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Certification and freshness are managed centrally in BI Fabric.
+            Certification and freshness are managed centrally in Report Hub.
           </p>
         </div>
       </div>
@@ -398,7 +398,7 @@ export function GovernancePage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-between">
                       <span className="text-[12px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                        BI Fabric
+                        Report Hub
                       </span>
                       <ChevronRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
@@ -455,7 +455,7 @@ export function GovernancePage() {
 
         <div className="bg-white rounded-lg p-3 border border-[#BFDBFE]">
           <p className="text-[12px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Changes are request-driven and reviewed through BI Fabric.
+            Changes are request-driven and reviewed through Report Hub.
           </p>
         </div>
       </div>
@@ -464,7 +464,7 @@ export function GovernancePage() {
       <div className="bg-white rounded-[12px] border border-[#E5E7EB] p-5 shadow-sm">
         <div className="flex items-center justify-between">
           <p className="text-[12px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Governance visibility powered by BI Fabric dummy data
+            Governance visibility powered by Report Hub dummy data
           </p>
           <div className="flex gap-3">
             <button

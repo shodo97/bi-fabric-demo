@@ -18,7 +18,7 @@ import { SettingsPage } from './pages/Settings';
 import { NotFoundPage } from './pages/NotFound';
 import ReportFlowNew from './pages/ReportFlow_new';
 
-// BI Fabric Platform - v1.0.0
+// Report Hub Platform - v1.0.0
 export default function App() {
   return (
     <BrowserRouter>

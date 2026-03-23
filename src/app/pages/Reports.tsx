@@ -100,7 +100,7 @@ function ReportsIndexView() {
             </div>
             <div>
               <p className="text-[13px] text-green-900 font-medium">
-                {migratedReportName} is now available in BI Fabric.
+                {migratedReportName} is now available in Report Hub.
               </p>
             </div>
           </div>
@@ -566,7 +566,7 @@ function ReportDetailView({ reportId }: { reportId: string }) {
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(7);
       pdf.setTextColor(accentBlue);
-      pdf.text('BI Fabric', marginX + 3, y + 4);
+      pdf.text('Report Hub', marginX + 3, y + 4);
 
       if (report.enterprise_flag) {
         pdf.setFillColor('#FFFBEB');
@@ -949,7 +949,7 @@ function ReportDetailView({ reportId }: { reportId: string }) {
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(7);
         pdf.setTextColor(gray);
-        pdf.text('Powered by BI Fabric', marginX, pageH - 8);
+        pdf.text('Powered by Report Hub', marginX, pageH - 8);
         pdf.text(`Page ${p} of ${totalPages}`, pageW - marginX - 20, pageH - 8);
       }
 
@@ -1040,7 +1040,7 @@ function ReportDetailView({ reportId }: { reportId: string }) {
                 className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-[12px] font-medium"
                 style={{ fontFamily: 'Inter, sans-serif' }}
               >
-                BI Fabric
+                Report Hub
               </div>
             </div>
             <p className="text-[13px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -1144,7 +1144,7 @@ function ReportDetailView({ reportId }: { reportId: string }) {
             
             <div className="bg-[#F8F9FB] rounded-lg p-3 border border-[#E5E7EB]">
               <p className="text-[11px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                Preview rendered via BI Fabric (lightweight)
+                Preview rendered via Report Hub (lightweight)
               </p>
             </div>
           </>
@@ -1165,7 +1165,7 @@ function ReportDetailView({ reportId }: { reportId: string }) {
 
         <div className="mt-4 pt-4 border-t border-[#E5E7EB]">
           <p className="text-[10px] text-[#6B7280] text-center" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Powered by BI Fabric dummy data (connected model)
+            Powered by Report Hub dummy data (connected model)
           </p>
         </div>
       </div>

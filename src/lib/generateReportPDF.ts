@@ -1,5 +1,5 @@
 /**
- * Professional PDF Generation Utility for BI Fabric Reports
+ * Professional PDF Generation Utility for Report Hub Reports
  * 
  * This module generates high-quality, structured PDFs using jsPDF and jsPDF-AutoTable.
  * It does NOT use DOM screenshot capture (html2canvas). Instead, it programmatically
@@ -276,7 +276,7 @@ function addFooter(pdf: jsPDF, margin: number): void {
   pdf.setFontSize(7);
   pdf.setTextColor(PDF_CONFIG.colors.secondary);
   pdf.setFont(PDF_CONFIG.fonts.regular, 'normal');
-  pdf.text('Powered by BI Fabric · Data-Driven · Connected Model', margin, footerY);
+  pdf.text('Powered by Report Hub · Data-Driven · Connected Model', margin, footerY);
 
   // Date (right-aligned)
   const dateStr = new Date().toLocaleDateString('en-US', {

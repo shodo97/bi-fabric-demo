@@ -138,7 +138,7 @@ export const ReportPreviewUI: React.FC<ReportPreviewProps> = ({ msgId, reportNam
                     {reportName}
                   </h4>
                   <span className="text-[10px] text-[#6B7280] bg-blue-50 px-2 py-1 rounded" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    Report preview (BI Fabric)
+                    Report preview (Report Hub)
                   </span>
                 </div>
                 

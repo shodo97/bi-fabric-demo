@@ -1,4 +1,4 @@
-// BI Fabric Backend Data Model (Dummy Data)
+// Report Hub Backend Data Model (Dummy Data)
 // This simulates a connected backend with realistic enterprise BI data
 
 // ===== CATALOG TABLES =====
