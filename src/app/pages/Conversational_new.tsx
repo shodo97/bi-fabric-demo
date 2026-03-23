@@ -6354,7 +6354,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
 
             return (
             <div className="flex-1 overflow-y-auto px-8 pt-8 pb-20">
-              <div className="w-full max-w-[900px] mx-auto space-y-8">
+              <div className="w-full max-w-[1100px] mx-auto space-y-8">
                 <div className="text-center">
                   <h1 className="text-[32px] font-semibold text-[#111827] mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
                     What would you like to work on?

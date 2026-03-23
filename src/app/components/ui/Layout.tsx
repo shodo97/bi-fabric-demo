@@ -13,7 +13,6 @@ import {
   Bell,
   User,
   ChevronDown,
-  Send,
 } from 'lucide-react';
 import { cn } from "../../../lib/utils";
 import { usePersona, personas, PersonaType } from '../../context/PersonaContext';
@@ -27,20 +26,7 @@ export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const { persona, personaType, setPersonaType, isMarketingDirector } = usePersona();
   const [personaDropdownOpen, setPersonaDropdownOpen] = React.useState(false);
-  const [talkInput, setTalkInput] = React.useState('');
   const dropdownRef = React.useRef<HTMLDivElement>(null);
-
-  const hiddenPanelPaths = ['/', '/persona', '/conversational'];
-  const showTalkPanel = !hiddenPanelPaths.includes(location.pathname) && !location.pathname.startsWith('/talk/');
-
-  const defaultPills = ['Explore reports', 'Ask a question', 'Create report', 'View datasets'];
-  const pills = (persona?.quickActions || defaultPills).slice(0, 5);
-
-  const handleTalkSubmit = (text: string) => {
-    if (!text.trim()) return;
-    setTalkInput('');
-    navigate('/conversational', { state: { prompt: text.trim() } });
-  };
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -271,53 +257,11 @@ export function Layout({ children }: LayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <main className={cn("ml-[76px] pt-[60px] min-h-screen", showTalkPanel && "pb-[130px]")}>
+      <main className="ml-[76px] pt-[60px] min-h-screen">
         <div className="p-8 max-w-[1400px] mx-auto space-y-8">
            {children}
         </div>
       </main>
-
-      {/* Sticky Talk Panel */}
-      {showTalkPanel && (
-        <div className="fixed bottom-0 left-[76px] right-0 z-40 bg-white border-t border-[#E5E7EB] shadow-[0_-2px_10px_rgba(0,0,0,0.04)] px-6 py-3">
-          <div className="max-w-[1400px] mx-auto space-y-2.5">
-            {/* Pills Row */}
-            <div className="flex gap-2 overflow-x-auto no-scrollbar">
-              {pills.map((pill, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleTalkSubmit(pill)}
-                  className="px-3 py-1.5 bg-[#F8F9FB] hover:bg-gray-100 border border-[#E5E7EB] rounded-full text-[12px] text-[#6B7280] hover:text-[#111827] transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
-                  style={{ fontFamily: 'Inter, sans-serif' }}
-                >
-                  {pill}
-                </button>
-              ))}
-            </div>
-            {/* Input Row */}
-            <div className="relative flex items-center">
-              <input
-                type="text"
-                value={talkInput}
-                onChange={(e) => setTalkInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleTalkSubmit(talkInput);
-                }}
-                placeholder="Ask anything about your reports and data..."
-                className="w-full h-[42px] pl-4 pr-12 bg-[#F8F9FB] border border-[#E5E7EB] rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-gray-400"
-                style={{ fontFamily: 'Inter, sans-serif' }}
-              />
-              <button
-                onClick={() => handleTalkSubmit(talkInput)}
-                className="absolute right-2 p-1.5 rounded-md hover:bg-gray-200 transition-colors text-[#6B7280] hover:text-[#111827]"
-                title="Send"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
