@@ -17,6 +17,7 @@ import {
   getDatasetOwner,
   searchSimilarReports,
   saveReportConfiguration,
+  getRecentReports,
 } from '@/lib/dataModel';
 import { SuggestedPrompts } from '@/app/components/SuggestedPrompts';
 import { InlineChart } from '@/app/components/InlineChart';
@@ -6333,68 +6334,144 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
       >
         <div className="h-full flex flex-col bg-[#F8F9FB]">
           {/* STATE 1: NEW CONVERSATION */}
-          {flowState === 'new' && messages.length === 0 && (
-            <div className="flex-1 flex flex-col items-center justify-center px-8 pb-20">
-              <div className="w-full max-w-[900px]">
-                <h1 className="text-[32px] font-semibold text-[#111827] text-center mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
-                  What would you like to work on?
-                </h1>
-                <p className="text-[14px] text-[#6B7280] text-center mb-8" style={{ fontFamily: 'Inter, sans-serif' }}>
-                  You can explore your reports and datasets, ask a question, or create something new.
-                </p>
+          {flowState === 'new' && messages.length === 0 && (() => {
+            const freqReports = getRecentReports(5);
+            const trendingReports = getRecentReports(7);
+            const freqBorderColors = ['#3B82F6', '#8B5CF6', '#10B981', '#E11D48', '#F59E0B'];
+            const defaultIntentCards = [
+              { title: 'Create a New Report', description: 'Start building insights from your connected datasets', gradient: 'from-blue-500 to-indigo-600', action: 'Help me create a new report' },
+              { title: 'Explore Trending Data', description: 'See what reports and datasets are gaining traction', gradient: 'from-purple-500 to-pink-600', action: 'Show me trending reports and datasets' },
+              { title: 'Data Quality Overview', description: 'Check freshness and governance status across datasets', gradient: 'from-emerald-500 to-teal-600', action: 'Show me data quality overview' },
+              { title: 'Ask a Business Question', description: 'Use conversational analytics to get instant answers', gradient: 'from-orange-500 to-amber-600', action: 'I want to ask a business question' },
+            ];
+            const intentCards = persona?.intentCards ?? defaultIntentCards;
+            const colorMap: Record<string, string> = {
+              'from-blue-500': '#3B82F6', 'from-purple-500': '#8B5CF6', 'from-emerald-500': '#10B981',
+              'from-orange-500': '#F97316', 'from-pink-500': '#EC4899', 'from-violet-500': '#8B5CF6',
+              'from-rose-500': '#F43F5E', 'from-red-500': '#EF4444', 'from-indigo-500': '#6366F1', 'from-green-500': '#22C55E',
+            };
+            const scrollbarHideStyle: React.CSSProperties = { msOverflowStyle: 'none', scrollbarWidth: 'none' };
 
-                <div className="grid grid-cols-4 gap-4 mb-6">
-                  <div
-                    onClick={() => handleContextCardClick('My Reports')}
-                    className="bg-white border border-[#E5E7EB] rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer text-center"
-                  >
+            return (
+            <div className="flex-1 overflow-y-auto px-8 pt-8 pb-20">
+              <div className="w-full max-w-[900px] mx-auto space-y-8">
+                <div className="text-center">
+                  <h1 className="text-[32px] font-semibold text-[#111827] mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    What would you like to work on?
+                  </h1>
+                  <p className="text-[14px] text-[#6B7280] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    You can explore your reports and datasets, ask a question, or create something new.
+                  </p>
+                </div>
+
+                {/* Context Cards */}
+                <div className="grid grid-cols-4 gap-4">
+                  <div onClick={() => handleContextCardClick('My Reports')} className="bg-white border border-[#E5E7EB] rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer text-center">
                     <FileText className="w-5 h-5 text-blue-600 mb-3 mx-auto" />
-                    <p className="text-[11px] font-semibold text-[#6B7280] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      My Reports
-                    </p>
-                    <p className="text-[24px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      {reportsCount}
-                    </p>
+                    <p className="text-[11px] font-semibold text-[#6B7280] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>My Reports</p>
+                    <p className="text-[24px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>{reportsCount}</p>
                   </div>
-                  <div
-                    onClick={() => handleContextCardClick('My Datasets')}
-                    className="bg-white border border-[#E5E7EB] rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer text-center"
-                  >
+                  <div onClick={() => handleContextCardClick('My Datasets')} className="bg-white border border-[#E5E7EB] rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer text-center">
                     <Database className="w-5 h-5 text-green-600 mb-3 mx-auto" />
-                    <p className="text-[11px] font-semibold text-[#6B7280] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      My Datasets
-                    </p>
-                    <p className="text-[24px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      {datasetsCount}
-                    </p>
+                    <p className="text-[11px] font-semibold text-[#6B7280] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>My Datasets</p>
+                    <p className="text-[24px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>{datasetsCount}</p>
                   </div>
-                  <div
-                    onClick={() => handleContextCardClick('Recently Used')}
-                    className="bg-white border border-[#E5E7EB] rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer text-center"
-                  >
+                  <div onClick={() => handleContextCardClick('Recently Used')} className="bg-white border border-[#E5E7EB] rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer text-center">
                     <Clock className="w-5 h-5 text-purple-600 mb-3 mx-auto" />
-                    <p className="text-[11px] font-semibold text-[#6B7280] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      Recently Used
-                    </p>
-                    <p className="text-[24px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      {recentlyUsedCount}
-                    </p>
+                    <p className="text-[11px] font-semibold text-[#6B7280] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>Recently Used</p>
+                    <p className="text-[24px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>{recentlyUsedCount}</p>
                   </div>
-                  <div
-                    onClick={() => handleContextCardClick('New Since Last Visit')}
-                    className="bg-white border border-[#E5E7EB] rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer text-center"
-                  >
+                  <div onClick={() => handleContextCardClick('New Since Last Visit')} className="bg-white border border-[#E5E7EB] rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer text-center">
                     <Layers className="w-5 h-5 text-orange-600 mb-3 mx-auto" />
-                    <p className="text-[11px] font-semibold text-[#6B7280] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      New Since Last Visit
-                    </p>
-                    <p className="text-[24px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      {newItemsCount}
-                    </p>
+                    <p className="text-[11px] font-semibold text-[#6B7280] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>New Since Last Visit</p>
+                    <p className="text-[24px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>{newItemsCount}</p>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap justify-center gap-2 mb-8">
+                {/* Quick Summary of Topics */}
+                <div>
+                  <div className="mb-3">
+                    <h2 className="text-[16px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>Quick Summary</h2>
+                    <p className="text-[12px] text-[#6B7280] mt-0.5" style={{ fontFamily: 'Inter, sans-serif' }}>Personalized topics based on your role</p>
+                  </div>
+                  <div className="grid grid-cols-4 gap-4">
+                    {intentCards.map((card, idx) => {
+                      const borderColor = colorMap[card.gradient.split(' ')[0]] || '#3B82F6';
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => handleStarterPillClick(card.action)}
+                          className="bg-white rounded-[12px] border border-[#E5E7EB] p-5 text-left shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+                          style={{ borderLeft: `3px solid ${borderColor}` }}
+                        >
+                          <div className="text-[14px] font-bold text-[#111827] mb-1.5" style={{ fontFamily: 'Inter, sans-serif' }}>{card.title}</div>
+                          <div className="text-[12px] text-[#6B7280] leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>{card.description}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Frequently Accessed Reports */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-[16px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>Frequently Accessed</h2>
+                    <button onClick={() => handleStarterPillClick('Explore my reports')} className="text-[13px] font-medium text-[#6B7280] hover:text-[#111827] transition-colors" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      See all &rarr;
+                    </button>
+                  </div>
+                  <div className="flex gap-4 overflow-x-auto pb-2" style={scrollbarHideStyle}>
+                    {freqReports.map((report: any, idx: number) => (
+                      <button
+                        key={report.report_id}
+                        onClick={() => handleReportSelect(report)}
+                        className="flex-shrink-0 w-[260px] bg-white rounded-[12px] border border-[#E5E7EB] p-5 text-left shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+                        style={{ borderLeft: `3px solid ${freqBorderColors[idx % freqBorderColors.length]}` }}
+                      >
+                        <div className="text-[14px] font-bold text-[#111827] mb-2 line-clamp-2" style={{ fontFamily: 'Inter, sans-serif' }}>{report.report_name}</div>
+                        <div className="inline-block text-[11px] font-medium text-[#6B7280] bg-[#F8F9FB] px-2 py-0.5 rounded mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>{report.domain}</div>
+                        <div className="text-[11px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>Updated {formatRelativeTime(report.last_updated_ts)}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Trending Reports with Access Gating */}
+                <div>
+                  <div className="mb-3">
+                    <h2 className="text-[16px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>Trending in Your Area</h2>
+                    <p className="text-[12px] text-[#6B7280] mt-0.5" style={{ fontFamily: 'Inter, sans-serif' }}>Reports gaining traction across your organization</p>
+                  </div>
+                  <div className="flex gap-4 overflow-x-auto pb-2" style={scrollbarHideStyle}>
+                    {trendingReports.map((report: any, idx: number) => {
+                      const hasAccess = idx < 5;
+                      return (
+                        <button
+                          key={report.report_id}
+                          onClick={() => { if (hasAccess) handleReportSelect(report); }}
+                          className={`flex-shrink-0 w-[260px] rounded-[12px] border border-[#E5E7EB] p-5 text-left shadow-sm transition-all duration-200 ${
+                            hasAccess ? 'bg-white hover:shadow-md hover:-translate-y-0.5 cursor-pointer' : 'bg-gray-50 opacity-70 cursor-default'
+                          }`}
+                          style={{ borderLeft: `3px solid ${freqBorderColors[idx % freqBorderColors.length]}` }}
+                        >
+                          <div className={`text-[14px] font-bold mb-2 line-clamp-2 ${hasAccess ? 'text-[#111827]' : 'text-[#9CA3AF]'}`} style={{ fontFamily: 'Inter, sans-serif' }}>{report.report_name}</div>
+                          <div className="inline-block text-[11px] font-medium text-[#6B7280] bg-[#F8F9FB] px-2 py-0.5 rounded mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>{report.domain}</div>
+                          {hasAccess ? (
+                            <div className="text-[11px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>Updated {formatRelativeTime(report.last_updated_ts)}</div>
+                          ) : (
+                            <div className="mt-1">
+                              <div className="text-[11px] text-[#9CA3AF] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>You don't have access to this report yet.</div>
+                              <span className="inline-block text-[11px] font-semibold text-[#E11D48] bg-[#FFF1F2] px-3 py-1 rounded-md" style={{ fontFamily: 'Inter, sans-serif' }}>Request Access</span>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Starter Pills */}
+                <div className="flex flex-wrap justify-center gap-2">
                   {(persona?.quickActions || [
                     'Explore my reports',
                     'Explore my datasets',
@@ -6413,6 +6490,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                   ))}
                 </div>
 
+                {/* Input */}
                 <div className="flex gap-3 items-end">
                   <textarea
                     value={inputValue}
@@ -6435,7 +6513,8 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                 </div>
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {/* STATE 2: ACTIVE CONVERSATION */}
           {(flowState === 'active' || messages.length > 0) && (

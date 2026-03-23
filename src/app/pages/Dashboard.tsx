@@ -3,7 +3,6 @@ import { Layout } from '../components/ui/Layout';
 import { useNavigate } from 'react-router';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import MedallionIcon from '../../imports/Group5';
-import { usePersona } from '@/app/context/PersonaContext';
 import {
   getReportsCount,
   getDatasetsCount,
@@ -17,39 +16,9 @@ import {
   formatRelativeTime,
 } from '@/lib/dataModel';
 
-const defaultIntentCards = [
-  {
-    title: 'Create a New Report',
-    description: 'Start building insights from your connected datasets',
-    gradient: 'from-blue-500 to-indigo-600',
-    action: 'Help me create a new report',
-  },
-  {
-    title: 'Explore Trending Data',
-    description: 'See what reports and datasets are gaining traction',
-    gradient: 'from-purple-500 to-pink-600',
-    action: 'Show me trending reports and datasets',
-  },
-  {
-    title: 'Data Quality Overview',
-    description: 'Check freshness and governance status across datasets',
-    gradient: 'from-emerald-500 to-teal-600',
-    action: 'Show me data quality overview',
-  },
-  {
-    title: 'Ask a Business Question',
-    description: 'Use conversational analytics to get instant answers',
-    gradient: 'from-orange-500 to-amber-600',
-    action: 'I want to ask a business question',
-  },
-];
-
-const freqBorderColors = ['#3B82F6', '#8B5CF6', '#10B981', '#E11D48', '#F59E0B'];
 
 export function DashboardPage() {
   const navigate = useNavigate();
-  const { persona } = usePersona();
-
   // Load data from backend model
   const reportsCount = getReportsCount(false);
   const enterpriseReportsCount = getReportsCount(true);
@@ -62,7 +31,6 @@ export function DashboardPage() {
   const topTerritories = getTopTerritories(5);
   const bottomTerritories = getBottomTerritories(5);
   const recentReports = getRecentReports(5);
-  const trendingReports = getRecentReports(7);
   const featuredDatasets = getFeaturedDatasets(6);
 
   // Prepare current month performance data
@@ -75,13 +43,6 @@ export function DashboardPage() {
 
   // Sample every 10th data point for cleaner chart
   const sampledRevenueData = last90DaysData.filter((_, idx) => idx % 10 === 0);
-
-  const intentCards = persona?.intentCards ?? defaultIntentCards;
-
-  const scrollbarHideStyle: React.CSSProperties = {
-    msOverflowStyle: 'none',
-    scrollbarWidth: 'none',
-  };
 
   const font = { fontFamily: 'Inter, sans-serif' };
   const cardBase = 'bg-white rounded-[12px] border border-[#E5E7EB] p-6 shadow-sm';
@@ -163,156 +124,6 @@ export function DashboardPage() {
               Gold Datasets
             </div>
           </button>
-        </div>
-
-        {/* ===== NEW SECTION A: Quick Summary of Topics ===== */}
-        <div>
-          <div className="mb-3">
-            <h2 className="text-[16px] font-semibold text-[#111827]" style={font}>
-              Quick Summary
-            </h2>
-            <p className="text-[12px] text-[#6B7280] mt-0.5" style={font}>
-              Personalized topics based on your role
-            </p>
-          </div>
-          <div className="grid grid-cols-4 gap-4">
-            {intentCards.map((card, idx) => {
-              // Extract a left-border color from the gradient name
-              const colorMap: Record<string, string> = {
-                'from-blue-500': '#3B82F6',
-                'from-purple-500': '#8B5CF6',
-                'from-emerald-500': '#10B981',
-                'from-orange-500': '#F97316',
-                'from-pink-500': '#EC4899',
-                'from-violet-500': '#8B5CF6',
-                'from-rose-500': '#F43F5E',
-                'from-red-500': '#EF4444',
-                'from-indigo-500': '#6366F1',
-                'from-green-500': '#22C55E',
-              };
-              const gradientKey = card.gradient.split(' ')[0];
-              const borderColor = colorMap[gradientKey] || '#3B82F6';
-
-              return (
-                <button
-                  key={idx}
-                  onClick={() => navigate('/conversational', { state: { prompt: card.action } })}
-                  className="bg-white rounded-[12px] border border-[#E5E7EB] p-5 text-left shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
-                  style={{ borderLeft: `3px solid ${borderColor}` }}
-                >
-                  <div className="text-[14px] font-bold text-[#111827] mb-1.5" style={font}>
-                    {card.title}
-                  </div>
-                  <div className="text-[12px] text-[#6B7280] leading-relaxed" style={font}>
-                    {card.description}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ===== NEW SECTION B: Frequently Accessed Reports ===== */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-[16px] font-semibold text-[#111827]" style={font}>
-              Frequently Accessed
-            </h2>
-            <button
-              onClick={() => navigate('/reports')}
-              className="text-[13px] font-medium text-[#6B7280] hover:text-[#111827] transition-colors"
-              style={font}
-            >
-              See all &rarr;
-            </button>
-          </div>
-          <div
-            className="flex gap-4 overflow-x-auto pb-2"
-            style={scrollbarHideStyle}
-          >
-            <style>{`.flex.overflow-x-auto::-webkit-scrollbar { display: none; }`}</style>
-            {recentReports.map((report, idx) => (
-              <button
-                key={report.report_id}
-                onClick={() => navigate(`/reports/${report.report_id}`)}
-                className="flex-shrink-0 w-[260px] bg-white rounded-[12px] border border-[#E5E7EB] p-5 text-left shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
-                style={{ borderLeft: `3px solid ${freqBorderColors[idx % freqBorderColors.length]}` }}
-              >
-                <div className="text-[14px] font-bold text-[#111827] mb-2 line-clamp-2" style={font}>
-                  {report.report_name}
-                </div>
-                <div className="inline-block text-[11px] font-medium text-[#6B7280] bg-[#F8F9FB] px-2 py-0.5 rounded mb-2" style={font}>
-                  {report.domain}
-                </div>
-                <div className="text-[11px] text-[#6B7280]" style={font}>
-                  Updated {formatRelativeTime(report.last_updated_ts)}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ===== NEW SECTION C: Trending Reports with Access Gating ===== */}
-        <div>
-          <div className="mb-3">
-            <h2 className="text-[16px] font-semibold text-[#111827]" style={font}>
-              Trending in Your Area
-            </h2>
-            <p className="text-[12px] text-[#6B7280] mt-0.5" style={font}>
-              Reports gaining traction across your organization
-            </p>
-          </div>
-          <div
-            className="flex gap-4 overflow-x-auto pb-2"
-            style={scrollbarHideStyle}
-          >
-            {trendingReports.map((report, idx) => {
-              const hasAccess = idx < 5;
-              return (
-                <button
-                  key={report.report_id}
-                  onClick={() => {
-                    if (hasAccess) {
-                      navigate(`/reports/${report.report_id}`);
-                    }
-                  }}
-                  className={`flex-shrink-0 w-[260px] rounded-[12px] border border-[#E5E7EB] p-5 text-left shadow-sm transition-all duration-200 ${
-                    hasAccess
-                      ? 'bg-white hover:shadow-md hover:-translate-y-0.5 cursor-pointer'
-                      : 'bg-gray-50 opacity-70 cursor-default'
-                  }`}
-                  style={{ borderLeft: `3px solid ${freqBorderColors[idx % freqBorderColors.length]}` }}
-                >
-                  <div
-                    className={`text-[14px] font-bold mb-2 line-clamp-2 ${hasAccess ? 'text-[#111827]' : 'text-[#9CA3AF]'}`}
-                    style={font}
-                  >
-                    {report.report_name}
-                  </div>
-                  <div className="inline-block text-[11px] font-medium text-[#6B7280] bg-[#F8F9FB] px-2 py-0.5 rounded mb-2" style={font}>
-                    {report.domain}
-                  </div>
-                  {hasAccess ? (
-                    <div className="text-[11px] text-[#6B7280]" style={font}>
-                      Updated {formatRelativeTime(report.last_updated_ts)}
-                    </div>
-                  ) : (
-                    <div className="mt-1">
-                      <div className="text-[11px] text-[#9CA3AF] mb-2" style={font}>
-                        You don't have access to this report yet.
-                      </div>
-                      <span
-                        className="inline-block text-[11px] font-semibold text-[#E11D48] bg-[#FFF1F2] px-3 py-1 rounded-md"
-                        style={font}
-                      >
-                        Request Access
-                      </span>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
         </div>
 
         {/* ===== 3. KEY SIGNALS ===== */}
