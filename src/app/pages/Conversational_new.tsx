@@ -290,6 +290,13 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
   const [referenceReportLink, setReferenceReportLink] = useState<string>('');
   const [referenceLayoutApplied, setReferenceLayoutApplied] = useState<boolean>(false);
   const [referenceReportName, setReferenceReportName] = useState<string>('');
+  const [requestedReportIds, setRequestedReportIds] = useState<Set<string>>(new Set());
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [qsFlowCard, setQsFlowCard] = useState<number | null>(null);
+  const [qsFading, setQsFading] = useState(false);
+  const [qsAnswerLoaded, setQsAnswerLoaded] = useState(false);
+  const qsInputRef = useRef<HTMLTextAreaElement>(null);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [selectedExecutionPath, setSelectedExecutionPath] = useState<'open_source' | 'enterprise_bi'>('open_source');
   const [selectedEnterprisePlatform, setSelectedEnterprisePlatform] = useState<'Looker' | 'Qlik' | 'Tableau' | null>(null);
@@ -418,6 +425,77 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
       }, 800);
     }
   }, [messages, isReportFlowMode]);
+
+  // Quick Summary flow data
+  const qsFlowData = [
+    {
+      title: 'Campaign Performance Summary',
+      subtitle: 'Your Q1 campaigns show 12% higher engagement compared to last quarter, with digital channels leading the growth.',
+      answer: 'Based on your latest data, Q1 campaign performance is trending <strong>12% above Q4 benchmarks</strong>. Here\u2019s what stands out:<br><br>\u2022 <strong>Digital campaigns</strong> drove 68% of total engagement, up from 54% last quarter<br>\u2022 <strong>Email open rates</strong> improved to 28.3%, outperforming the 24% industry average<br>\u2022 <strong>Top performer</strong>: \u201cSpring Refresh\u201d campaign generated 3.2x ROI with a $45K spend<br>\u2022 <strong>Social channels</strong> saw a 19% increase in click-through rates, led by Instagram and LinkedIn<br><br>Overall, your marketing mix is well-optimized. The shift toward digital is paying off, though there\u2019s room to experiment with emerging channels.',
+      chips: ['Which campaigns had the highest ROI?', 'Show me by channel', 'Compare to Q4'],
+      placeholder: 'Ask a follow-up about campaign performance\u2026',
+    },
+    {
+      title: 'Audience Growth Alert',
+      subtitle: 'The Digital Natives segment grew 23% this month \u2014 your fastest-growing audience cohort.',
+      answer: 'Your <strong>Digital Natives</strong> segment (ages 18\u201334, digitally engaged) has grown 23% month-over-month, making it your fastest-expanding audience. Key insights:<br><br>\u2022 <strong>Total segment size</strong>: 142K users, up from 115K last month<br>\u2022 <strong>Primary acquisition channels</strong>: Instagram (38%), TikTok (27%), organic search (19%)<br>\u2022 <strong>Engagement rate</strong>: 4.7x higher than your overall average<br>\u2022 <strong>Demographics</strong>: 62% urban, skewing slightly female (56/44)<br>\u2022 <strong>Revenue contribution</strong>: This segment now accounts for 18% of total revenue, up from 12%<br><br>This cohort responds well to short-form video and personalized recommendations. Consider increasing investment in these channels.',
+      chips: ['Who makes up this segment?', 'How does it compare to other segments?', 'Show growth over time'],
+      placeholder: 'Ask a follow-up about audience growth\u2026',
+    },
+    {
+      title: 'Channel Mix Optimization',
+      subtitle: 'Social is outperforming email by 2.1x on conversion rate \u2014 consider reallocating 15% of email budget.',
+      answer: 'Your channel performance data reveals significant opportunities for optimization:<br><br>\u2022 <strong>Social media conversion rate</strong>: 3.8% (up 0.6pp from last quarter)<br>\u2022 <strong>Email conversion rate</strong>: 1.8% (flat quarter-over-quarter)<br>\u2022 <strong>Paid search</strong>: 2.4% conversion, CPA down 12% \u2014 your most efficient paid channel<br>\u2022 <strong>Display</strong>: Underperforming at 0.9% conversion, high impression volume but low intent<br><br><strong>Recommendation</strong>: Shift 15% of email budget ($12K/month) toward social and paid search. Modeling suggests this could increase overall conversions by 8\u201311% without increasing total spend.<br><br>The email channel still delivers strong ROI for retention \u2014 focus it there while letting social handle acquisition.',
+      chips: ['Break down by platform', 'What\u2019s the email open rate?', 'Show conversion funnel'],
+      placeholder: 'Ask a follow-up about channel optimization\u2026',
+    },
+    {
+      title: 'Budget Utilization',
+      subtitle: '67% of Q1 budget deployed with 8% running under plan \u2014 no overspend categories detected.',
+      answer: 'Here\u2019s your Q1 budget utilization breakdown as of today:<br><br>\u2022 <strong>Total budget</strong>: $480K &nbsp;|&nbsp; <strong>Deployed</strong>: $322K (67%) &nbsp;|&nbsp; <strong>Remaining</strong>: $158K<br>\u2022 <strong>On track</strong>: Content marketing ($85K/$120K), Events ($42K/$60K)<br>\u2022 <strong>Under plan</strong> (\u22128%): Paid media has spent $128K of $160K target \u2014 pacing 8% behind schedule<br>\u2022 <strong>Over-performing ROI</strong>: Influencer partnerships delivering 4.1x ROAS vs 2.5x target<br>\u2022 <strong>No overspend</strong> detected in any category<br><br><strong>Forecast</strong>: At current pace, you\u2019ll end Q1 with ~$38K unspent. The paid media gap presents an opportunity \u2014 reallocating even $20K toward high-performing social campaigns could yield an estimated $82K in incremental revenue.',
+      chips: ['Where is the remaining budget allocated?', 'Show spend by team', 'Forecast end-of-quarter'],
+      placeholder: 'Ask a follow-up about budget utilization\u2026',
+    },
+  ];
+
+  const handleQsFlowEnter = (idx: number) => {
+    setQsFading(true);
+    setTimeout(() => {
+      setQsFlowCard(idx);
+      setQsAnswerLoaded(false);
+      window.history.pushState({ qsFlow: true }, '');
+      requestAnimationFrame(() => {
+        setQsFading(false);
+        setTimeout(() => setQsAnswerLoaded(true), 800);
+      });
+    }, 200);
+  };
+
+  const handleQsFlowExit = () => {
+    setQsFading(true);
+    setTimeout(() => {
+      setQsFlowCard(null);
+      requestAnimationFrame(() => setQsFading(false));
+    }, 200);
+  };
+
+  const handleQsFlowSend = (text: string) => {
+    setQsFlowCard(null);
+    setQsFading(false);
+    handleStarterPillClick(text);
+  };
+
+  // Browser back button support for QS flow
+  useEffect(() => {
+    const onPopState = () => {
+      if (qsFlowCard !== null) {
+        setQsFlowCard(null);
+        setQsFading(false);
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [qsFlowCard]);
 
   const autoSaveConversation = () => {
     if (!activeConversationId) return;
@@ -6196,16 +6274,15 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
   return (
     <Layout>
       {/* SECONDARY NAV — TALK HISTORY */}
-      <aside className="fixed top-[60px] left-[76px] bottom-0 w-[240px] bg-white border-r border-[#E5E7EB] z-30 flex flex-col">
-        <div className="p-4 border-b border-[#E5E7EB]">
+      <aside className="fixed top-[52px] left-[64px] bottom-0 w-[240px] bg-white border-r border-[#ECEAE6] z-30 flex flex-col">
+        <div className="p-4 border-b border-[#ECEAE6]">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-[15px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <h2 className="text-[16px] font-semibold text-[#2C2B29]" style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }}>
               Talk
             </h2>
             <button
               onClick={handleNewConversation}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#111827] hover:bg-[#0F172A] text-white rounded-lg text-[11px] font-medium transition-colors"
-              style={{ fontFamily: 'Inter, sans-serif' }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#111110] hover:bg-[#2C2B29] text-white border border-[#111110] rounded-[7px] text-[12px] font-medium transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               New
@@ -6213,17 +6290,17 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+        <div className="flex-1 overflow-y-auto p-3 space-y-0">
           {conversations.map((conv) => (
             <div
               key={conv.id}
               onClick={() => handleLoadConversation(conv)}
               onMouseEnter={() => setHoveredConvId(conv.id)}
               onMouseLeave={() => setHoveredConvId(null)}
-              className={`p-3 rounded-lg cursor-pointer transition-all group ${
+              className={`p-3 rounded-lg cursor-pointer transition-colors duration-150 group border-b border-[#F7F5F2] ${
                 activeConversationId === conv.id
-                  ? 'bg-blue-50 border border-blue-200'
-                  : 'bg-gray-50 hover:bg-gray-100 border border-transparent'
+                  ? 'bg-[#F0EDE8] border-b-[#ECEAE6]'
+                  : 'bg-transparent hover:bg-[#F4F2EF]'
               }`}
             >
               {editingConvId === conv.id ? (
@@ -6269,11 +6346,11 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="text-[12px] font-medium text-[#111827] line-clamp-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      <p className="text-[12px] font-medium text-[#2C2B29] line-clamp-2">
                         {conv.title}
                       </p>
                       {conv.status === 'planned' && (
-                        <span className="bg-blue-100 text-blue-700 text-[9px] font-medium px-1.5 py-0.5 rounded" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded" style={{ background: '#EBF0FB', color: '#1A55A0' }}>
                           Planned
                         </span>
                       )}
@@ -6283,7 +6360,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                         </span>
                       )}
                     </div>
-                    <p className="text-[10px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    <p className="text-[10.5px] text-[#8A8785]">
                       {formatRelativeTime(conv.timestamp)}
                     </p>
                   </div>
@@ -6327,17 +6404,20 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
       </aside>
 
       {/* MAIN TALK WORKSPACE */}
-      <div 
-        className={`fixed top-[60px] left-[316px] bottom-0 overflow-hidden transition-all duration-300 ${
+      <div
+        className={`fixed top-[52px] left-[304px] bottom-0 overflow-hidden transition-all duration-300 ${
           isReportPanelOpen || isDatasetPanelOpen ? 'right-[480px]' : 'right-0'
         }`}
       >
-        <div className="h-full flex flex-col bg-[#F8F9FB]">
+        <div className="h-full flex flex-col bg-[#F7F6F3]">
           {/* STATE 1: NEW CONVERSATION */}
           {flowState === 'new' && messages.length === 0 && (() => {
             const freqReports = getRecentReports(5);
-            const trendingReports = getRecentReports(7);
-            const freqBorderColors = ['#3B82F6', '#8B5CF6', '#10B981', '#E11D48', '#F59E0B'];
+            const trendingReportsRaw = getRecentReports(7);
+            // Put restricted reports (idx >= 5) first
+            const trendingRestricted = trendingReportsRaw.slice(5);
+            const trendingAccessible = trendingReportsRaw.slice(0, 5);
+            const trendingReports = [...trendingRestricted, ...trendingAccessible];
             const defaultIntentCards = [
               { title: 'Create a New Report', description: 'Start building insights from your connected datasets', gradient: 'from-blue-500 to-indigo-600', action: 'Help me create a new report' },
               { title: 'Explore Trending Data', description: 'See what reports and datasets are gaining traction', gradient: 'from-purple-500 to-pink-600', action: 'Show me trending reports and datasets' },
@@ -6345,173 +6425,386 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
               { title: 'Ask a Business Question', description: 'Use conversational analytics to get instant answers', gradient: 'from-orange-500 to-amber-600', action: 'I want to ask a business question' },
             ];
             const intentCards = persona?.intentCards ?? defaultIntentCards;
-            const colorMap: Record<string, string> = {
-              'from-blue-500': '#3B82F6', 'from-purple-500': '#8B5CF6', 'from-emerald-500': '#10B981',
-              'from-orange-500': '#F97316', 'from-pink-500': '#EC4899', 'from-violet-500': '#8B5CF6',
-              'from-rose-500': '#F43F5E', 'from-red-500': '#EF4444', 'from-indigo-500': '#6366F1', 'from-green-500': '#22C55E',
-            };
+            // Fixed gradient palette for Quick Summary cards (cycles for >4 cards)
+            const cardGradients = [
+              'linear-gradient(135deg, #185FA5 0%, #0C447C 100%)',
+              'linear-gradient(135deg, #534AB7 0%, #3C3489 100%)',
+              'linear-gradient(135deg, #1D9E75 0%, #085041 100%)',
+              'linear-gradient(135deg, #BA7517 0%, #633806 100%)',
+            ];
             const scrollbarHideStyle: React.CSSProperties = { msOverflowStyle: 'none', scrollbarWidth: 'none' };
 
             return (
-            <div className="flex-1 overflow-y-auto px-8 pt-8 pb-20">
+            <div className="flex-1 flex flex-col overflow-hidden" style={{ opacity: qsFading ? 0 : 1, transition: 'opacity 200ms ease' }}>
+              {qsFlowCard === null ? (
+              /* ===== LANDING VIEW ===== */
+              <div className="flex-1 overflow-y-auto px-8 pt-8 pb-12">
               <div className="w-full max-w-[1100px] mx-auto space-y-8">
-                <div className="text-center">
-                  <h1 className="text-[32px] font-semibold text-[#111827] mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    What would you like to work on?
+
+                {/* Title / Intro */}
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#AAADA8] mb-2 flex items-center">
+                    <span className="inline-block w-4 h-px bg-[#D4D0CA] mr-2" />
+                    Good morning, Alex
+                  </p>
+                  <h1 className="text-[30px] text-[#111110] mb-2" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 700, letterSpacing: '-0.8px', lineHeight: 1.15 }}>
+                    What would you like to <span style={{ color: '#D4572A' }}>work on?</span>
                   </h1>
-                  <p className="text-[14px] text-[#6B7280] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    You can explore your reports and datasets, ask a question, or create something new.
+                  <p className="text-[14px] text-[#6B6965]">
+                    Explore your reports and datasets, ask a question, or create something new.
                   </p>
                 </div>
 
-                {/* Context Cards */}
-                <div className="grid grid-cols-4 gap-4">
-                  <div onClick={() => handleContextCardClick('My Reports')} className="bg-white border border-[#E5E7EB] rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer text-center">
-                    <FileText className="w-5 h-5 text-blue-600 mb-3 mx-auto" />
-                    <p className="text-[11px] font-semibold text-[#6B7280] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>My Reports</p>
-                    <p className="text-[24px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>{reportsCount}</p>
-                  </div>
-                  <div onClick={() => handleContextCardClick('My Datasets')} className="bg-white border border-[#E5E7EB] rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer text-center">
-                    <Database className="w-5 h-5 text-green-600 mb-3 mx-auto" />
-                    <p className="text-[11px] font-semibold text-[#6B7280] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>My Datasets</p>
-                    <p className="text-[24px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>{datasetsCount}</p>
-                  </div>
-                  <div onClick={() => handleContextCardClick('Recently Used')} className="bg-white border border-[#E5E7EB] rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer text-center">
-                    <Clock className="w-5 h-5 text-purple-600 mb-3 mx-auto" />
-                    <p className="text-[11px] font-semibold text-[#6B7280] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>Recently Used</p>
-                    <p className="text-[24px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>{recentlyUsedCount}</p>
-                  </div>
-                  <div onClick={() => handleContextCardClick('New Since Last Visit')} className="bg-white border border-[#E5E7EB] rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer text-center">
-                    <Layers className="w-5 h-5 text-orange-600 mb-3 mx-auto" />
-                    <p className="text-[11px] font-semibold text-[#6B7280] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>New Since Last Visit</p>
-                    <p className="text-[24px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>{newItemsCount}</p>
-                  </div>
-                </div>
-
-                {/* Quick Summary of Topics */}
+                {/* Quick Summary */}
                 <div>
-                  <div className="mb-3">
-                    <h2 className="text-[16px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>Quick Summary</h2>
-                    <p className="text-[12px] text-[#6B7280] mt-0.5" style={{ fontFamily: 'Inter, sans-serif' }}>Personalized topics based on your role</p>
-                  </div>
-                  <div className="grid grid-cols-4 gap-4">
-                    {intentCards.map((card, idx) => {
-                      const borderColor = colorMap[card.gradient.split(' ')[0]] || '#3B82F6';
-                      return (
-                        <button
-                          key={idx}
-                          onClick={() => handleStarterPillClick(card.action)}
-                          className="bg-white rounded-[12px] border border-[#E5E7EB] p-5 text-left shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
-                          style={{ borderLeft: `3px solid ${borderColor}` }}
-                        >
-                          <div className="text-[14px] font-bold text-[#111827] mb-1.5" style={{ fontFamily: 'Inter, sans-serif' }}>{card.title}</div>
-                          <div className="text-[12px] text-[#6B7280] leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>{card.description}</div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Frequently Accessed Reports */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-[16px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>Frequently Accessed</h2>
-                    <button onClick={() => handleStarterPillClick('Explore my reports')} className="text-[13px] font-medium text-[#6B7280] hover:text-[#111827] transition-colors" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      See all &rarr;
-                    </button>
-                  </div>
-                  <div className="flex gap-4 overflow-x-auto pb-2" style={scrollbarHideStyle}>
-                    {freqReports.map((report: any, idx: number) => (
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#AAADA8] mb-3">Quick Summary</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {intentCards.map((card, idx) => (
                       <button
-                        key={report.report_id}
-                        onClick={() => handleReportSelect(report)}
-                        className="flex-shrink-0 w-[260px] bg-white rounded-[12px] border border-[#E5E7EB] p-5 text-left shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
-                        style={{ borderLeft: `3px solid ${freqBorderColors[idx % freqBorderColors.length]}` }}
+                        key={idx}
+                        onClick={() => handleQsFlowEnter(idx)}
+                        aria-label={`Quick summary: ${card.title}`}
+                        className="flex items-center gap-4 rounded-[14px] text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 relative overflow-hidden group"
+                        style={{
+                          background: cardGradients[idx % cardGradients.length],
+                          padding: '18px 20px',
+                          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.15)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                       >
-                        <div className="text-[14px] font-bold text-[#111827] mb-2 line-clamp-2" style={{ fontFamily: 'Inter, sans-serif' }}>{report.report_name}</div>
-                        <div className="inline-block text-[11px] font-medium text-[#6B7280] bg-[#F8F9FB] px-2 py-0.5 rounded mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>{report.domain}</div>
-                        <div className="text-[11px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>Updated {formatRelativeTime(report.last_updated_ts)}</div>
+                        {/* Inner highlight overlay */}
+                        <div className="absolute inset-0 pointer-events-none rounded-[14px]" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 100%)' }} />
+                        <div className="flex-1 min-w-0 relative z-[1]">
+                          <div className="text-[14px] font-semibold mb-1" style={{ color: '#FFFFFF', fontFamily: "'Bricolage Grotesque', sans-serif" }}>{card.title}</div>
+                          <div className="text-[12.5px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)' }}>{card.description}</div>
+                        </div>
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 relative z-[1] transition-colors duration-150" style={{ background: 'rgba(255,255,255,0.15)' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.28)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; }}
+                        >
+                          <ChevronRight className="w-3.5 h-3.5" style={{ color: 'rgba(255,255,255,0.80)' }} aria-hidden="true" />
+                        </div>
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Trending Reports with Access Gating */}
-                <div>
-                  <div className="mb-3">
-                    <h2 className="text-[16px] font-semibold text-[#111827]" style={{ fontFamily: 'Inter, sans-serif' }}>Trending in Your Area</h2>
-                    <p className="text-[12px] text-[#6B7280] mt-0.5" style={{ fontFamily: 'Inter, sans-serif' }}>Reports gaining traction across your organization</p>
+                {/* Natural-language input */}
+                <div className="bg-white border border-[#E5E3DF] rounded-[12px] p-4 space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    {(persona?.quickActions || [
+                      'Explore my reports',
+                      'Explore my datasets',
+                      'Ask a business question',
+                      'Create a new report',
+                      'Request a migration',
+                    ]).map((pill, idx) => (
+                      <button
+                        key={`starter-${idx}`}
+                        onClick={() => handleStarterPillClick(pill)}
+                        className="inline-flex items-center justify-center h-[32px] px-[14px] bg-[#F4F2EF] border border-[#E5E3DF] rounded-[16px] text-[12px] leading-none whitespace-nowrap text-[#2C2B29] transition-all duration-150 hover:bg-[#1A1917] hover:text-white hover:border-[#1A1917]"
+                      >
+                        {pill}
+                      </button>
+                    ))}
                   </div>
-                  <div className="flex gap-4 overflow-x-auto pb-2" style={scrollbarHideStyle}>
-                    {trendingReports.map((report: any, idx: number) => {
-                      const hasAccess = idx < 5;
+                  <div className="flex gap-3 items-end">
+                    <textarea
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Ask a question, explore your data, or create something new…"
+                      className="flex-1 px-4 border border-[#E5E3DF] rounded-lg text-[14px] resize-none bg-[#F7F5F2] text-[#111110] placeholder:text-[#AAADA8] input-warm-focus"
+                      style={{ minHeight: '42px', maxHeight: '120px', height: '42px', paddingTop: '10px', paddingBottom: '10px' }}
+                      rows={1}
+                    />
+                    <button
+                      onClick={handleAsk}
+                      disabled={!inputValue.trim() || isGenerating}
+                      aria-label="Send message"
+                      className="px-6 bg-[#111110] text-white rounded-lg text-[13px] font-medium transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#111110] focus-visible:ring-offset-2"
+                      style={{ height: '42px' }}
+                      onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.background = '#D4572A'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                    >
+                      <Send className="w-4 h-4" aria-hidden="true" />
+                      Ask
+                    </button>
+                  </div>
+                </div>
+
+                {/* Stat Cards */}
+                <div className="grid grid-cols-4 gap-3">
+                  {[
+                    { label: 'My Reports', count: reportsCount, trend: '↑ 2 this week', bg: '#EBF3FE', iconColor: '#185FA5', icon: FileText, action: 'My Reports' },
+                    { label: 'Datasets', count: datasetsCount, trend: '↑ 1 this week', bg: '#EEEDFE', iconColor: '#534AB7', icon: Database, action: 'My Datasets' },
+                    { label: 'Recent', count: recentlyUsedCount, trend: '↑ 3 this week', bg: '#FEF0EC', iconColor: '#D4572A', icon: Clock, action: 'Recently Used' },
+                    { label: 'New', count: newItemsCount, trend: '↑ 1 this week', bg: '#E1F5EE', iconColor: '#1D9E75', icon: Layers, action: 'New Since Last Visit' },
+                  ].map((stat) => {
+                    const StatIcon = stat.icon;
+                    return (
+                      <div
+                        key={stat.label}
+                        onClick={() => handleContextCardClick(stat.action)}
+                        className="bg-white rounded-[14px] border border-[#EDEAE4] p-5 cursor-pointer text-center transition-all duration-150"
+                        style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.07)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.03)'; }}
+                      >
+                        <div className="w-9 h-9 rounded-[10px] mx-auto mb-3 flex items-center justify-center" style={{ background: stat.bg }}>
+                          <StatIcon className="w-4 h-4" style={{ color: stat.iconColor }} />
+                        </div>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#AAADA8] mb-1">{stat.label}</p>
+                        <p className="text-[28px] text-[#111110]" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 700, letterSpacing: '-0.8px', fontVariantNumeric: 'tabular-nums' }}>{stat.count}</p>
+                        <p className="text-[10px] font-medium text-[#10B981] mt-1">{stat.trend}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Frequently Accessed */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#AAADA8]">Frequently Accessed</p>
+                    <button onClick={() => handleStarterPillClick('Explore my reports')} className="text-[12px] font-medium text-[#D4572A] transition-opacity duration-150 hover:opacity-80 flex items-center gap-1 group/see">
+                      See all
+                      <svg className="w-3 h-3 transition-transform duration-150 group-hover/see:translate-x-[3px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                  </div>
+                  <div className="flex gap-3 overflow-x-auto pb-2" style={scrollbarHideStyle}>
+                    {freqReports.map((report: any, idx: number) => {
+                      const stripeGradients = [
+                        'linear-gradient(90deg, #3B82F6, #6366F1)',
+                        'linear-gradient(90deg, #8B5CF6, #A855F7)',
+                        'linear-gradient(90deg, #10B981, #059669)',
+                        'linear-gradient(90deg, #D4572A, #B84F24)',
+                        'linear-gradient(90deg, #3B82F6, #6366F1)',
+                      ];
                       return (
-                        <button
-                          key={report.report_id}
-                          onClick={() => { if (hasAccess) handleReportSelect(report); }}
-                          className={`flex-shrink-0 w-[260px] rounded-[12px] border border-[#E5E7EB] p-5 text-left shadow-sm transition-all duration-200 ${
-                            hasAccess ? 'bg-white hover:shadow-md hover:-translate-y-0.5 cursor-pointer' : 'bg-gray-50 opacity-70 cursor-default'
-                          }`}
-                          style={{ borderLeft: `3px solid ${freqBorderColors[idx % freqBorderColors.length]}` }}
-                        >
-                          <div className={`text-[14px] font-bold mb-2 line-clamp-2 ${hasAccess ? 'text-[#111827]' : 'text-[#9CA3AF]'}`} style={{ fontFamily: 'Inter, sans-serif' }}>{report.report_name}</div>
-                          <div className="inline-block text-[11px] font-medium text-[#6B7280] bg-[#F8F9FB] px-2 py-0.5 rounded mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>{report.domain}</div>
-                          {hasAccess ? (
-                            <div className="text-[11px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>Updated {formatRelativeTime(report.last_updated_ts)}</div>
-                          ) : (
-                            <div className="mt-1">
-                              <div className="text-[11px] text-[#9CA3AF] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>You don't have access to this report yet.</div>
-                              <span className="inline-block text-[11px] font-semibold text-[#E11D48] bg-[#FFF1F2] px-3 py-1 rounded-md" style={{ fontFamily: 'Inter, sans-serif' }}>Request Access</span>
-                            </div>
-                          )}
-                        </button>
+                      <button
+                        key={report.report_id}
+                        onClick={() => handleReportSelect(report)}
+                        className="flex-shrink-0 w-[240px] bg-white rounded-[14px] border border-[#ECEAE6] p-4 text-left cursor-pointer relative group overflow-hidden transition-all duration-180"
+                        style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = '#D4D0CA'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.03)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = '#ECEAE6'; }}
+                      >
+                        <div className="absolute bottom-0 left-0 right-0 h-[3px]" style={{ background: stripeGradients[idx % stripeGradients.length] }} />
+                        <ArrowRight className="absolute top-[13px] right-[13px] w-3.5 h-3.5 text-[#AAADA8] opacity-0 translate-x-1 -translate-y-1 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-180" />
+                        <div className="text-[12.5px] font-medium text-[#111110] mb-2 line-clamp-2 pr-5">{report.report_name}</div>
+                        <div className="inline-block text-[10.5px] font-medium text-[#6B6965] bg-[#F4F2EF] border border-[#E5E3DF] px-[7px] py-[2px] rounded mb-2">{report.domain}</div>
+                        <div className="text-[10.5px] text-[#8A8785]">Updated {formatRelativeTime(report.last_updated_ts)}</div>
+                      </button>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* Starter Pills */}
-                <div className="flex flex-wrap justify-center gap-2">
-                  {(persona?.quickActions || [
-                    'Explore my reports',
-                    'Explore my datasets',
-                    'Ask a business question',
-                    'Create a new report',
-                    'Request a migration',
-                  ]).map((pill, idx) => (
-                    <button
-                      key={`starter-${idx}`}
-                      onClick={() => handleStarterPillClick(pill)}
-                      className="px-4 py-2.5 bg-white hover:bg-gray-50 border border-[#E5E7EB] rounded-full text-[13px] text-[#111827] transition-all shadow-sm hover:shadow-md"
-                      style={{ fontFamily: 'Inter, sans-serif' }}
-                    >
-                      {pill}
-                    </button>
-                  ))}
+                {/* Trending in Your Area */}
+                <div>
+                  <div className="mb-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#AAADA8]">Trending in Your Area</p>
+                  </div>
+                  <div className="flex gap-3 overflow-x-auto pb-2" style={scrollbarHideStyle}>
+                    {trendingReports.map((report: any, idx: number) => {
+                      const hasAccess = idx >= trendingRestricted.length;
+                      const isRequested = requestedReportIds.has(report.report_id);
+                      const trendStripeGradients = [
+                        'linear-gradient(90deg, #3B82F6, #6366F1)',
+                        'linear-gradient(90deg, #8B5CF6, #A855F7)',
+                        'linear-gradient(90deg, #10B981, #059669)',
+                        'linear-gradient(90deg, #D4572A, #B84F24)',
+                        'linear-gradient(90deg, #3B82F6, #6366F1)',
+                        'linear-gradient(90deg, #8B5CF6, #A855F7)',
+                        'linear-gradient(90deg, #10B981, #059669)',
+                      ];
+                      return (
+                        <div
+                          key={report.report_id}
+                          className={`flex-shrink-0 w-[240px] rounded-[14px] border border-[#ECEAE6] p-4 text-left relative overflow-hidden group transition-all duration-180 ${
+                            hasAccess ? 'bg-white cursor-pointer' : 'bg-white'
+                          }`}
+                          style={{ opacity: hasAccess ? 1 : 0.80, boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}
+                          onClick={() => { if (hasAccess) handleReportSelect(report); }}
+                          onMouseEnter={(e) => { if (hasAccess) { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = '#D4D0CA'; } }}
+                          onMouseLeave={(e) => { if (hasAccess) { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.03)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = '#ECEAE6'; } }}
+                          role={hasAccess ? 'button' : undefined}
+                          tabIndex={hasAccess ? 0 : undefined}
+                          aria-label={hasAccess ? `Open ${report.report_name}` : undefined}
+                        >
+                          <div className="absolute bottom-0 left-0 right-0 h-[3px]" style={{ background: trendStripeGradients[idx % trendStripeGradients.length] }} />
+                          {hasAccess ? (
+                            <>
+                              <ArrowRight className="absolute top-[13px] right-[13px] w-3.5 h-3.5 text-[#AAADA8] opacity-0 translate-x-1 -translate-y-1 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-180" />
+                              <div className="text-[12.5px] font-medium text-[#111110] mb-2 line-clamp-2 pr-5">{report.report_name}</div>
+                              <div className="inline-block text-[10.5px] font-medium text-[#6B6965] bg-[#F4F2EF] border border-[#E5E3DF] px-[7px] py-[2px] rounded mb-2">{report.domain}</div>
+                              <div className="text-[10.5px] text-[#8A8785]">Updated {formatRelativeTime(report.last_updated_ts)}</div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="text-[12.5px] font-medium mb-2 line-clamp-2 text-[#6B6965]">{report.report_name}</div>
+                              <div className="inline-block text-[10.5px] font-medium text-[#6B6965] bg-[#F4F2EF] border border-[#E5E3DF] px-[7px] py-[2px] rounded mb-2">{report.domain}</div>
+                              <div className="mt-1">
+                                <div className="flex items-center gap-1 mb-2">
+                                  <Shield className="w-3 h-3 text-[#8A8785]" aria-hidden="true" />
+                                  <span className="text-[11.5px] text-[#8A8785]">Access restricted</span>
+                                </div>
+                                {isRequested ? (
+                                  <span className="inline-flex items-center gap-1.5 text-[11.5px] font-medium px-[10px] py-[5px] rounded-[6px]" style={{ background: '#EAF3DE', color: '#3B6D11', border: '1px solid #C0DD97', cursor: 'default', pointerEvents: 'none' }}>
+                                    <Check className="w-3 h-3" aria-hidden="true" />
+                                    Access Requested
+                                  </span>
+                                ) : (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setRequestedReportIds(prev => new Set(prev).add(report.report_id));
+                                      setToastMessage(report.report_name);
+                                      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+                                      toastTimerRef.current = setTimeout(() => setToastMessage(null), 3000);
+                                    }}
+                                    className="inline-flex items-center gap-1.5 text-[11.5px] font-medium px-[10px] py-[5px] rounded-[6px] cursor-pointer transition-colors duration-150"
+                                    style={{ background: '#FEF0EC', color: '#C24A1E', border: '1px solid #F5C4B3' }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = '#FDE4DB'; e.currentTarget.style.borderColor = '#F0997B'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = '#FEF0EC'; e.currentTarget.style.borderColor = '#F5C4B3'; }}
+                                  >
+                                    <ArrowRight className="w-3 h-3" aria-hidden="true" />
+                                    Request Access
+                                  </button>
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                {/* Input */}
-                <div className="flex gap-3 items-end">
-                  <textarea
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Ask a question, explore your data, or create something new…"
-                    className="flex-1 px-5 py-4 border border-[#E5E7EB] rounded-xl text-[14px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm"
-                    style={{ fontFamily: 'Inter, sans-serif', minHeight: '56px', maxHeight: '120px' }}
-                    rows={1}
-                  />
-                  <button
-                    onClick={handleAsk}
-                    disabled={!inputValue.trim() || isGenerating}
-                    className="px-6 py-4 bg-[#111827] hover:bg-[#0F172A] text-white rounded-xl text-[14px] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
-                    style={{ fontFamily: 'Inter, sans-serif', height: '56px' }}
-                  >
-                    <Send className="w-4 h-4" />
-                    Ask
-                  </button>
+              </div>
+            </div>
+              ) : (
+              /* ===== QUICK SUMMARY FLOW VIEW ===== */
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Breadcrumb */}
+                <div className="px-8 pt-5 pb-0">
+                  <div className="flex items-center gap-1.5 text-[12px]">
+                    <button onClick={handleQsFlowExit} className="text-[#D4572A] font-medium hover:opacity-80 transition-opacity duration-150">Talk</button>
+                    <span className="text-[#AAADA8]">\u203A</span>
+                    <span className="text-[#111110] font-medium">{qsFlowData[qsFlowCard!]?.title ?? intentCards[qsFlowCard!]?.title}</span>
+                  </div>
+                </div>
+
+                {/* Scrollable content */}
+                <div className="flex-1 overflow-y-auto px-8 pt-5 pb-6">
+                  <div className="w-full max-w-[900px] mx-auto space-y-5">
+
+                    {/* Zone 1 — Context header */}
+                    <div
+                      className="rounded-[10px] relative overflow-hidden"
+                      style={{
+                        background: cardGradients[qsFlowCard! % cardGradients.length],
+                        padding: '14px 18px',
+                      }}
+                    >
+                      <button
+                        onClick={handleQsFlowExit}
+                        className="absolute top-3 right-4 transition-opacity duration-150 hover:opacity-80"
+                        style={{ color: 'rgba(255,255,255,0.50)' }}
+                        aria-label="Close"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                      <div className="text-[14px] font-semibold mb-1" style={{ color: '#FFFFFF' }}>
+                        {qsFlowData[qsFlowCard!]?.title ?? intentCards[qsFlowCard!]?.title}
+                      </div>
+                      <div className="text-[12px]" style={{ color: 'rgba(255,255,255,0.70)' }}>
+                        {qsFlowData[qsFlowCard!]?.subtitle}
+                      </div>
+                    </div>
+
+                    {/* Zone 2 — AI response */}
+                    <div className="bg-white border border-[#ECEAE6] rounded-[10px] p-5">
+                      {/* Header row */}
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-2 h-2 rounded-full bg-[#D4572A] flex-shrink-0" />
+                        <span className="text-[12px] text-[#8A8785]">Report Hub AI</span>
+                        <span className="text-[10px] text-[#AAADA8] ml-auto">Just now</span>
+                      </div>
+
+                      {/* Answer body or shimmer */}
+                      {!qsAnswerLoaded ? (
+                        <div className="space-y-3">
+                          <div className="shimmer-line h-4 w-full" />
+                          <div className="shimmer-line h-4 w-[92%]" />
+                          <div className="shimmer-line h-4 w-[85%]" />
+                          <div className="shimmer-line h-4 w-full" />
+                          <div className="shimmer-line h-4 w-[78%]" />
+                          <div className="shimmer-line h-4 w-[60%]" />
+                        </div>
+                      ) : (
+                        <div
+                          className="text-[14px] text-[#2C2B29]"
+                          style={{ lineHeight: 1.7 }}
+                          dangerouslySetInnerHTML={{ __html: qsFlowData[qsFlowCard!]?.answer ?? '' }}
+                        />
+                      )}
+
+                      {/* Follow-up chips */}
+                      {qsAnswerLoaded && (
+                        <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-[#ECEAE6]">
+                          {(qsFlowData[qsFlowCard!]?.chips ?? []).map((chip, chipIdx) => (
+                            <button
+                              key={chipIdx}
+                              onClick={() => { setInputValue(chip); requestAnimationFrame(() => qsInputRef.current?.focus()); }}
+                              className="inline-flex items-center justify-center h-[32px] px-[14px] bg-[#F4F2EF] hover:bg-[#EDEBE6] border border-[#E5E3DF] hover:border-[#CECBC5] rounded-[16px] text-[12px] leading-none whitespace-nowrap text-[#2C2B29] hover:text-[#111110] transition-colors duration-150"
+                            >
+                              {chip}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* Zone 3 — Input (pinned to bottom) */}
+                <div className="px-8 pb-5 pt-3">
+                  <div className="w-full max-w-[900px] mx-auto">
+                    <div className="bg-white border border-[#E5E3DF] rounded-[12px] p-3">
+                      <div className="flex gap-3 items-end">
+                        <textarea
+                          value={inputValue}
+                          onChange={(e) => setInputValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              if (inputValue.trim()) handleQsFlowSend(inputValue.trim());
+                            }
+                          }}
+                          placeholder={qsFlowData[qsFlowCard!]?.placeholder ?? 'Ask a follow-up\u2026'}
+                          className="flex-1 px-4 border border-[#E5E3DF] rounded-lg text-[14px] resize-none bg-[#F7F5F2] text-[#111110] placeholder:text-[#AAADA8] input-warm-focus"
+                          style={{ minHeight: '42px', maxHeight: '120px', height: '42px', paddingTop: '10px', paddingBottom: '10px' }}
+                          rows={1}
+                        />
+                        <button
+                          onClick={() => { if (inputValue.trim()) handleQsFlowSend(inputValue.trim()); }}
+                          disabled={!inputValue.trim()}
+                          aria-label="Send message"
+                          className="px-6 bg-[#111110] hover:bg-[#2C2B29] text-white rounded-lg text-[13px] font-medium transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                          style={{ height: '42px' }}
+                        >
+                          <Send className="w-4 h-4" aria-hidden="true" />
+                          Ask
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
+              )}
             </div>
             );
           })()}
@@ -6544,14 +6837,22 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                 </div>
               </div>
 
-              <div className="border-t border-[#E5E7EB] bg-white p-6">
+              <div
+                className="p-6"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.85)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  borderTop: '1px solid rgba(0, 0, 0, 0.06)',
+                }}
+              >
                 <div className="max-w-[900px] mx-auto flex gap-3 items-end">
                   <textarea
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Ask a follow-up, explore more data, or refine your request…"
-                    className="flex-1 px-4 py-3 border border-[#E5E7EB] rounded-xl text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm"
+                    className="flex-1 px-4 py-3 border border-[#E5E7EB] rounded-xl text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/90 shadow-sm"
                     style={{ fontFamily: 'Inter, sans-serif', minHeight: '52px', maxHeight: '120px' }}
                     rows={1}
                   />
@@ -7097,6 +7398,33 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
           </div>
         </aside>
       )}
+
+      {/* Toast notification */}
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 28,
+          left: '50%',
+          transform: toastMessage ? 'translateX(-50%) translateY(-4px)' : 'translateX(-50%) translateY(0)',
+          background: '#1C1B19',
+          color: '#FFFFFF',
+          fontSize: 13,
+          fontWeight: 400,
+          padding: '10px 18px',
+          borderRadius: 8,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          opacity: toastMessage ? 1 : 0,
+          pointerEvents: 'none',
+          transition: 'opacity 0.2s ease, transform 0.2s ease',
+          zIndex: 999,
+          whiteSpace: 'nowrap' as const,
+        }}
+      >
+        <Check className="w-3.5 h-3.5" style={{ color: '#10B981' }} />
+        <span>Access requested for <strong>{toastMessage}</strong></span>
+      </div>
 
     </Layout>
   );
