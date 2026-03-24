@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Layout } from '../components/ui/Layout';
 import { useNavigate, useSearchParams, useLocation, useParams } from 'react-router';
 import {
@@ -297,6 +298,8 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
   const [qsFading, setQsFading] = useState(false);
   const [qsAnswerLoaded, setQsAnswerLoaded] = useState(false);
   const qsInputRef = useRef<HTMLTextAreaElement>(null);
+  const [reportFlowCard, setReportFlowCard] = useState<{ report: any; idx: number } | null>(null);
+  const [reportAnswerLoaded, setReportAnswerLoaded] = useState(false);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [selectedExecutionPath, setSelectedExecutionPath] = useState<'open_source' | 'enterprise_bi'>('open_source');
   const [selectedEnterprisePlatform, setSelectedEnterprisePlatform] = useState<'Looker' | 'Qlik' | 'Tableau' | null>(null);
@@ -483,6 +486,18 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
     setQsFlowCard(null);
     setQsFading(false);
     handleStarterPillClick(text);
+  };
+
+  const handleReportFlowEnter = (report: any, idx: number) => {
+    setQsFading(true);
+    setTimeout(() => {
+      setReportFlowCard({ report, idx });
+      setReportAnswerLoaded(false);
+      requestAnimationFrame(() => {
+        setQsFading(false);
+        setTimeout(() => setReportAnswerLoaded(true), 800);
+      });
+    }, 200);
   };
 
   // Browser back button support for QS flow
@@ -3660,12 +3675,12 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
     if (message.type === 'assistant') {
       return (
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-            <Sparkles className="w-4 h-4 text-blue-700" />
+          <div className="w-8 h-8 rounded-full bg-[#FEF0EC] flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-4 h-4 text-[#D4572A]" />
           </div>
           <div className="flex-1">
             {message.content && (
-              <p className="text-[14px] text-[#111827] leading-relaxed whitespace-pre-line mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
+              <p className="text-[14px] text-[#1C1917] leading-relaxed whitespace-pre-line mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
                 {message.content.split('**').map((part, i) => 
                   i % 2 === 0 ? part : <strong key={i}>{part}</strong>
                 )}
@@ -6317,7 +6332,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                       }
                     }}
                     onClick={(e) => e.stopPropagation()}
-                    className="flex-1 px-2 py-1 text-[12px] border border-blue-400 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-2 py-1 text-[12px] border border-[#E5E3DF] rounded input-warm-focus"
                     style={{ fontFamily: 'Inter, sans-serif' }}
                     autoFocus
                   />
@@ -6425,26 +6440,118 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
               { title: 'Ask a Business Question', description: 'Use conversational analytics to get instant answers', gradient: 'from-orange-500 to-amber-600', action: 'I want to ask a business question' },
             ];
             const intentCards = persona?.intentCards ?? defaultIntentCards;
+            // Unified home navigation — fades out, resets both QS and report flow states
+            const goHome = () => {
+              setQsFading(true);
+              setTimeout(() => {
+                setQsFlowCard(null);
+                setReportFlowCard(null);
+                setQsAnswerLoaded(false);
+                setReportAnswerLoaded(false);
+                requestAnimationFrame(() => setQsFading(false));
+              }, 200);
+            };
+
+            // Report-specific pre-populated content
+            const reportFlowDataMap: Record<string, { subtitle: string; answer: string; chips: string[]; placeholder: string }> = {
+              'RPT-CHURN-001': {
+                subtitle: 'Churn rose 2.1pp in October — 68% of exits concentrated in the 0–6 month tenure cohort.',
+                answer: 'October churn reached <strong>8.4%</strong>, up from 6.3% in September, driven primarily by early-life exits. Key findings:<br><br>• <strong>0–6 month cohort</strong> accounts for 68% of churned customers — highest risk window<br>• <strong>Top exit reason</strong>: Product-feature mismatch (34%), followed by pricing (22%)<br>• <strong>Highest-churn segment</strong>: SMB accounts in the West region (+3.8pp vs average)<br>• <strong>Retention bright spot</strong>: Enterprise accounts showed 0.9% churn — 7× lower than SMB<br><br>Early intervention at the 45-day mark could retain an estimated 18% of at-risk accounts based on historical save rates.',
+                chips: ['Which segments are churning most?', 'Show month-over-month trend', 'What\'s driving early churn?'],
+                placeholder: 'Ask a follow-up about customer churn…',
+              },
+              'RPT-001': {
+                subtitle: 'Sales unit revenue is up 9% QTD — 3 of 5 territories are above plan, Northeast leading at 114%.',
+                answer: 'Your <strong>SU&G Performance</strong> shows strong QTD momentum across most territories. Highlights:<br><br>• <strong>Overall QTD revenue</strong>: $2.4M — 9% above plan ($2.2M target)<br>• <strong>Northeast</strong>: 114% of plan, led by the Albany and Boston accounts<br>• <strong>Southwest</strong>: 108% of plan — consistent for 3 consecutive quarters<br>• <strong>Midwest</strong>: 91% of plan, $62K gap — at risk of missing quarter-end target<br>• <strong>Pipeline coverage</strong>: 2.8× open pipeline vs remaining target<br><br>The Midwest gap is recoverable with the 4 deals in late-stage negotiation (combined $84K). Recommend priority focus on those accounts this week.',
+                chips: ['Break down by territory', 'Show pipeline by rep', 'Forecast quarter-end'],
+                placeholder: 'Ask a follow-up about SU&G performance…',
+              },
+              'RPT-003': {
+                subtitle: 'Territory take rates averaged 23.4% nationally — Western region is 4.1pp below the top-performing tier.',
+                answer: 'National take rate stands at <strong>23.4%</strong> this period. Regional breakdown reveals a clear performance gap:<br><br>• <strong>Top tier</strong> (Northeast + Southeast): 27.2% average — dense prospect pools<br>• <strong>Mid tier</strong> (Central): 24.1% — steady, consistent with prior quarter<br>• <strong>Below average</strong> (Western): 19.1% — 4.1pp below next tier, competitive pressure in SF and LA<br>• <strong>New territory</strong> (Pacific Northwest): 16.8% — ramp period ends Q3<br><br>Western territory could close 2pp of the gap by shifting focus to mid-market accounts, where win rates are 1.6× higher vs enterprise in that region.',
+                chips: ['Show by territory on a map', 'Which products have the best take rate?', 'Compare to last quarter'],
+                placeholder: 'Ask a follow-up about territory take rates…',
+              },
+              'RPT-005': {
+                subtitle: '82% of outlets are meeting or exceeding targets — 14 outlets flagged for intervention this quarter.',
+                answer: 'Your outlet network is performing at <strong>82% attainment</strong> across 204 active outlets. Key callouts:<br><br>• <strong>Exceeding target (&gt;110%)</strong>: 38 outlets — concentrated in Tier 1 urban markets<br>• <strong>On target (90–110%)</strong>: 129 outlets — healthy core of the network<br>• <strong>At risk (70–89%)</strong>: 23 outlets — need coaching and support<br>• <strong>Flagged (&lt;70%)</strong>: 14 outlets — recommend field visit within 30 days<br>• <strong>Top outlet</strong>: Chicago North (187% of target), driven by a new enterprise anchor account<br><br>The 14 flagged outlets share a common pattern: low foot traffic and high staff turnover. A targeted retention program could improve attainment by an estimated 12–15%.',
+                chips: ['Show flagged outlets list', 'What\'s the top performing region?', 'Filter by outlet size'],
+                placeholder: 'Ask a follow-up about outlet performance…',
+              },
+              'RPT-002': {
+                subtitle: 'NPS improved 8 points to 42 — detractor rate dropped from 24% to 19% over the past 90 days.',
+                answer: 'Customer experience metrics are trending positively. Your <strong>NPS score reached 42</strong>, the highest in 18 months:<br><br>• <strong>Promoters</strong>: 61% (+6pp vs last quarter)<br>• <strong>Passives</strong>: 20% (flat)<br>• <strong>Detractors</strong>: 19% (down from 24%) — driven by improved onboarding satisfaction<br>• <strong>CSAT</strong>: 4.3/5.0 — support interactions rated highest category<br>• <strong>First-contact resolution</strong>: 78%, up from 71%<br>• <strong>Top driver of dissatisfaction</strong>: Billing complexity (mentioned in 43% of negative responses)<br><br>Addressing the billing UX issue — estimated 6–8 week fix — could push NPS above 50 based on driver modeling.',
+                chips: ['Show NPS by customer segment', 'What are detractors saying?', 'Compare to industry benchmark'],
+                placeholder: 'Ask a follow-up about customer experience…',
+              },
+            };
+            const reportFlowDefault = {
+              subtitle: 'This report has been updated recently. Here\'s a summary of the key findings.',
+              answer: 'This report shows strong performance across the core metrics. Here\'s what stands out:<br><br>• <strong>Primary metric</strong>: Trending above target for the current period<br>• <strong>Key driver</strong>: Improved engagement in the highest-value segments<br>• <strong>Risk area</strong>: One sub-segment is underperforming — monitoring recommended<br>• <strong>Next review</strong>: Scheduled for end of quarter<br><br>Ask a follow-up question below to explore specific dimensions of this report.',
+              chips: ['Show key metrics', 'What changed this period?', 'Compare to last quarter'],
+              placeholder: 'Ask a follow-up…',
+            };
+            const currentReportData = reportFlowCard
+              ? (reportFlowDataMap[reportFlowCard.report.report_id] ?? reportFlowDefault)
+              : reportFlowDefault;
+
             // Fixed gradient palette for Quick Summary cards (cycles for >4 cards)
             const cardGradients = [
-              'linear-gradient(135deg, #185FA5 0%, #0C447C 100%)',
-              'linear-gradient(135deg, #534AB7 0%, #3C3489 100%)',
-              'linear-gradient(135deg, #1D9E75 0%, #085041 100%)',
-              'linear-gradient(135deg, #BA7517 0%, #633806 100%)',
+              'linear-gradient(148deg, #1E3A8A 0%, #1D4ED8 55%, #3B82F6 100%)',
+              'linear-gradient(148deg, #4C1D95 0%, #6D28D9 55%, #8B5CF6 100%)',
+              'linear-gradient(148deg, #134E4A 0%, #0F766E 55%, #14B8A6 100%)',
+              'linear-gradient(148deg, #78350F 0%, #B45309 55%, #F59E0B 100%)',
             ];
             const scrollbarHideStyle: React.CSSProperties = { msOverflowStyle: 'none', scrollbarWidth: 'none' };
 
             return (
-            <div className="flex-1 flex flex-col overflow-hidden" style={{ opacity: qsFading ? 0 : 1, transition: 'opacity 200ms ease' }}>
-              {qsFlowCard === null ? (
+            <div className="flex-1 flex flex-col overflow-hidden relative" style={{ opacity: qsFading ? 0 : 1, transition: 'opacity 200ms ease' }}>
+
+              {/* Floating Talk Home pill — visible in ALL conversation flows, never scrolls away */}
+              {(qsFlowCard !== null || reportFlowCard !== null) && (
+                <button
+                  onClick={goHome}
+                  aria-label="Back to Talk home"
+                  style={{
+                    position: 'absolute',
+                    top: 16,
+                    left: 32,
+                    zIndex: 20,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: '#FFFFFF',
+                    border: '1px solid #E5E3DF',
+                    borderRadius: 20,
+                    padding: '6px 14px 6px 10px',
+                    fontSize: 12.5,
+                    fontWeight: 500,
+                    color: '#2C2B29',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+                    cursor: 'pointer',
+                    fontFamily: "'Inter', sans-serif",
+                    transition: 'all 0.15s ease',
+                    minHeight: 32,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#F4F2EF'; e.currentTarget.style.borderColor = '#D4D0CA'; e.currentTarget.style.transform = 'translateX(-2px)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.borderColor = '#E5E3DF'; e.currentTarget.style.transform = ''; }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+                    <path d="M8.5 2.5L4.5 6.5L8.5 10.5" stroke="#6B6865" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Talk home
+                </button>
+              )}
+
+              {qsFlowCard === null && reportFlowCard === null ? (
               /* ===== LANDING VIEW ===== */
               <div className="flex-1 overflow-y-auto px-8 pt-8 pb-12">
               <div className="w-full max-w-[1100px] mx-auto space-y-8">
 
                 {/* Title / Intro */}
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#AAADA8] mb-2 flex items-center">
-                    <span className="inline-block w-4 h-px bg-[#D4D0CA] mr-2" />
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#8A8785] mb-2 flex items-center">
+                    <span className="inline-block w-[18px] h-[1.5px] bg-[#D4572A] mr-2 rounded-sm flex-shrink-0" />
                     Good morning, Alex
                   </p>
                   <h1 className="text-[30px] text-[#111110] mb-2" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 700, letterSpacing: '-0.8px', lineHeight: 1.15 }}>
@@ -6457,7 +6564,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
 
                 {/* Quick Summary */}
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#AAADA8] mb-3">Quick Summary</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#8A8785] mb-3">Quick Summary</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {intentCards.map((card, idx) => (
                       <button
@@ -6470,14 +6577,14 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                           padding: '18px 20px',
                           transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.15)'; }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 10px 28px rgba(0,0,0,0.18), 0 4px 10px rgba(0,0,0,0.10)'; }}
                         onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                       >
                         {/* Inner highlight overlay */}
-                        <div className="absolute inset-0 pointer-events-none rounded-[14px]" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 100%)' }} />
+                        <div className="absolute inset-0 pointer-events-none rounded-[14px]" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.10) 0%, transparent 60%)' }} />
                         <div className="flex-1 min-w-0 relative z-[1]">
-                          <div className="text-[14px] font-semibold mb-1" style={{ color: '#FFFFFF', fontFamily: "'Bricolage Grotesque', sans-serif" }}>{card.title}</div>
-                          <div className="text-[12.5px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)' }}>{card.description}</div>
+                          <div className="text-[14px] font-semibold mb-1" style={{ color: '#FFFFFF', fontFamily: "'Inter', sans-serif", letterSpacing: '-0.01em' }}>{card.title}</div>
+                          <div className="text-[12.5px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: "'Inter', sans-serif" }}>{card.description}</div>
                         </div>
                         <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 relative z-[1] transition-colors duration-150" style={{ background: 'rgba(255,255,255,0.15)' }}
                           onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.28)'; }}
@@ -6490,47 +6597,64 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                   </div>
                 </div>
 
-                {/* Natural-language input */}
-                <div className="bg-white border border-[#E5E3DF] rounded-[12px] p-4 space-y-3">
-                  <div className="flex flex-wrap gap-2">
-                    {(persona?.quickActions || [
-                      'Explore my reports',
-                      'Explore my datasets',
-                      'Ask a business question',
-                      'Create a new report',
-                      'Request a migration',
-                    ]).map((pill, idx) => (
+                {/* Natural-language input — elevated ask zone */}
+                <div style={{ position: 'relative' }}>
+                  {/* Warm ambient glow behind the card */}
+                  <div aria-hidden="true" style={{ position: 'absolute', zIndex: 0, width: '120%', height: '200%', top: '-50%', left: '-10%', background: 'radial-gradient(ellipse, rgba(212,87,42,0.04) 0%, transparent 65%)', pointerEvents: 'none' }} />
+                  <div
+                    className="bg-white space-y-3"
+                    style={{
+                      position: 'relative',
+                      zIndex: 1,
+                      border: '1.5px solid #E2DED8',
+                      borderRadius: '16px',
+                      padding: '20px',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.04), 0 8px 16px rgba(0,0,0,0.06), 0 24px 48px rgba(0,0,0,0.06)',
+                      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.08), 0 32px 64px rgba(0,0,0,0.07)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.04), 0 8px 16px rgba(0,0,0,0.06), 0 24px 48px rgba(0,0,0,0.06)'; }}
+                  >
+                    <div className="flex flex-wrap gap-2">
+                      {(persona?.quickActions || [
+                        'Explore my reports',
+                        'Explore my datasets',
+                        'Ask a business question',
+                        'Create a new report',
+                        'Request a migration',
+                      ]).map((pill, idx) => (
+                        <button
+                          key={`starter-${idx}`}
+                          onClick={() => handleStarterPillClick(pill)}
+                          className="inline-flex items-center justify-center h-[32px] px-[14px] bg-[#F4F2EF] border border-[#E5E3DF] rounded-[16px] text-[12px] leading-none whitespace-nowrap text-[#2C2B29] transition-all duration-150 hover:bg-[#1A1917] hover:text-white hover:border-[#1A1917] hover:-translate-y-px"
+                        >
+                          {pill}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex gap-3 items-end">
+                      <textarea
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Ask a question, explore your data, or create something new…"
+                        className="flex-1 px-4 border border-[#E8E5E0] rounded-[10px] text-[14px] resize-none bg-[#F9F8F6] text-[#1C1917] placeholder:text-[#8A8785] input-warm-focus"
+                        style={{ minHeight: '48px', maxHeight: '120px', height: '48px', paddingTop: '14px', paddingBottom: '14px' }}
+                        rows={1}
+                      />
                       <button
-                        key={`starter-${idx}`}
-                        onClick={() => handleStarterPillClick(pill)}
-                        className="inline-flex items-center justify-center h-[32px] px-[14px] bg-[#F4F2EF] border border-[#E5E3DF] rounded-[16px] text-[12px] leading-none whitespace-nowrap text-[#2C2B29] transition-all duration-150 hover:bg-[#1A1917] hover:text-white hover:border-[#1A1917]"
+                        onClick={handleAsk}
+                        disabled={!inputValue.trim() || isGenerating}
+                        aria-label="Send message"
+                        className="bg-[#1A1917] text-white text-[14px] font-medium transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D4572A] focus-visible:ring-offset-2"
+                        style={{ height: '48px', padding: '0 24px', borderRadius: '10px', flexShrink: 0 }}
+                        onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.background = '#D4572A'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(212,87,42,0.30)'; } }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = '#1A1917'; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = 'none'; }}
                       >
-                        {pill}
+                        <Send className="w-4 h-4" aria-hidden="true" />
+                        Ask
                       </button>
-                    ))}
-                  </div>
-                  <div className="flex gap-3 items-end">
-                    <textarea
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder="Ask a question, explore your data, or create something new…"
-                      className="flex-1 px-4 border border-[#E5E3DF] rounded-lg text-[14px] resize-none bg-[#F7F5F2] text-[#111110] placeholder:text-[#AAADA8] input-warm-focus"
-                      style={{ minHeight: '42px', maxHeight: '120px', height: '42px', paddingTop: '10px', paddingBottom: '10px' }}
-                      rows={1}
-                    />
-                    <button
-                      onClick={handleAsk}
-                      disabled={!inputValue.trim() || isGenerating}
-                      aria-label="Send message"
-                      className="px-6 bg-[#111110] text-white rounded-lg text-[13px] font-medium transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#111110] focus-visible:ring-offset-2"
-                      style={{ height: '42px' }}
-                      onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.background = '#D4572A'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.transform = 'translateY(0)'; }}
-                    >
-                      <Send className="w-4 h-4" aria-hidden="true" />
-                      Ask
-                    </button>
+                    </div>
                   </div>
                 </div>
 
@@ -6547,17 +6671,17 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                       <div
                         key={stat.label}
                         onClick={() => handleContextCardClick(stat.action)}
-                        className="bg-white rounded-[14px] border border-[#EDEAE4] p-5 cursor-pointer text-center transition-all duration-150"
-                        style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.07)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.03)'; }}
+                        className="bg-white rounded-[12px] border border-[#E5E3DF] p-5 cursor-pointer text-center transition-all duration-150"
+                        style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)'; e.currentTarget.style.borderColor = '#C8C5BF'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03)'; e.currentTarget.style.borderColor = '#E5E3DF'; }}
                       >
                         <div className="w-9 h-9 rounded-[10px] mx-auto mb-3 flex items-center justify-center" style={{ background: stat.bg }}>
                           <StatIcon className="w-4 h-4" style={{ color: stat.iconColor }} />
                         </div>
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#AAADA8] mb-1">{stat.label}</p>
-                        <p className="text-[28px] text-[#111110]" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 700, letterSpacing: '-0.8px', fontVariantNumeric: 'tabular-nums' }}>{stat.count}</p>
-                        <p className="text-[10px] font-medium text-[#10B981] mt-1">{stat.trend}</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#8A8785] mb-1">{stat.label}</p>
+                        <p className="text-[26px] text-[#1C1917]" style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{stat.count}</p>
+                        <p className="text-[10px] font-medium text-[#1D9E75] mt-1">{stat.trend}</p>
                       </div>
                     );
                   })}
@@ -6566,8 +6690,8 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                 {/* Frequently Accessed */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#AAADA8]">Frequently Accessed</p>
-                    <button onClick={() => handleStarterPillClick('Explore my reports')} className="text-[12px] font-medium text-[#D4572A] transition-opacity duration-150 hover:opacity-80 flex items-center gap-1 group/see">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#8A8785]">Frequently Accessed</p>
+                    <button onClick={() => handleStarterPillClick('Explore my reports')} className="text-[12px] font-medium text-[#D4572A] hover:text-[#BF4D25] hover:underline transition-colors duration-150 flex items-center gap-1 group/see">
                       See all
                       <svg className="w-3 h-3 transition-transform duration-150 group-hover/see:translate-x-[3px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                     </button>
@@ -6575,25 +6699,32 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                   <div className="flex gap-3 overflow-x-auto pb-2" style={scrollbarHideStyle}>
                     {freqReports.map((report: any, idx: number) => {
                       const stripeGradients = [
-                        'linear-gradient(90deg, #3B82F6, #6366F1)',
-                        'linear-gradient(90deg, #8B5CF6, #A855F7)',
-                        'linear-gradient(90deg, #10B981, #059669)',
-                        'linear-gradient(90deg, #D4572A, #B84F24)',
-                        'linear-gradient(90deg, #3B82F6, #6366F1)',
+                        'linear-gradient(90deg, #2563EB, #60A5FA)',
+                        'linear-gradient(90deg, #7C3AED, #A78BFA)',
+                        'linear-gradient(90deg, #0F766E, #5EEAD4)',
+                        'linear-gradient(90deg, #B45309, #FCD34D)',
+                        'linear-gradient(90deg, #2563EB, #60A5FA)',
                       ];
+                      const pillTints = [
+                        { bg: '#EBF3FE', color: '#0C447C' },
+                        { bg: '#EEEDFE', color: '#3C3489' },
+                        { bg: '#E1F5EE', color: '#085041' },
+                        { bg: '#FEF3E2', color: '#633806' },
+                      ];
+                      const pillStyle = pillTints[idx % pillTints.length];
                       return (
                       <button
                         key={report.report_id}
-                        onClick={() => handleReportSelect(report)}
-                        className="flex-shrink-0 w-[240px] bg-white rounded-[14px] border border-[#ECEAE6] p-4 text-left cursor-pointer relative group overflow-hidden transition-all duration-180"
-                        style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = '#D4D0CA'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.03)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = '#ECEAE6'; }}
+                        onClick={() => handleReportFlowEnter(report, idx)}
+                        className="flex-shrink-0 w-[240px] bg-white rounded-[12px] border border-[#E5E3DF] p-4 text-left cursor-pointer relative group overflow-hidden transition-all duration-200"
+                        style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.borderColor = '#C8C5BF'; e.currentTarget.style.background = '#FDFCFB'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = '#E5E3DF'; e.currentTarget.style.background = '#FFFFFF'; }}
                       >
                         <div className="absolute bottom-0 left-0 right-0 h-[3px]" style={{ background: stripeGradients[idx % stripeGradients.length] }} />
-                        <ArrowRight className="absolute top-[13px] right-[13px] w-3.5 h-3.5 text-[#AAADA8] opacity-0 translate-x-1 -translate-y-1 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-180" />
-                        <div className="text-[12.5px] font-medium text-[#111110] mb-2 line-clamp-2 pr-5">{report.report_name}</div>
-                        <div className="inline-block text-[10.5px] font-medium text-[#6B6965] bg-[#F4F2EF] border border-[#E5E3DF] px-[7px] py-[2px] rounded mb-2">{report.domain}</div>
+                        <ArrowRight className="absolute top-[13px] right-[13px] w-3.5 h-3.5 text-[#6B6965] opacity-0 -translate-x-1 translate-y-1 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-200" />
+                        <div className="text-[12.5px] font-medium text-[#1C1917] mb-2 line-clamp-2 pr-5">{report.report_name}</div>
+                        <div className="inline-block text-[10.5px] font-semibold px-[7px] py-[2px] rounded-full mb-2" style={{ background: pillStyle.bg, color: pillStyle.color }}>{report.domain}</div>
                         <div className="text-[10.5px] text-[#8A8785]">Updated {formatRelativeTime(report.last_updated_ts)}</div>
                       </button>
                       );
@@ -6604,31 +6735,36 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                 {/* Trending in Your Area */}
                 <div>
                   <div className="mb-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#AAADA8]">Trending in Your Area</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#8A8785]">Trending in Your Area</p>
                   </div>
                   <div className="flex gap-3 overflow-x-auto pb-2" style={scrollbarHideStyle}>
                     {trendingReports.map((report: any, idx: number) => {
                       const hasAccess = idx >= trendingRestricted.length;
                       const isRequested = requestedReportIds.has(report.report_id);
                       const trendStripeGradients = [
-                        'linear-gradient(90deg, #3B82F6, #6366F1)',
-                        'linear-gradient(90deg, #8B5CF6, #A855F7)',
-                        'linear-gradient(90deg, #10B981, #059669)',
-                        'linear-gradient(90deg, #D4572A, #B84F24)',
-                        'linear-gradient(90deg, #3B82F6, #6366F1)',
-                        'linear-gradient(90deg, #8B5CF6, #A855F7)',
-                        'linear-gradient(90deg, #10B981, #059669)',
+                        'linear-gradient(90deg, #2563EB, #60A5FA)',
+                        'linear-gradient(90deg, #7C3AED, #A78BFA)',
+                        'linear-gradient(90deg, #0F766E, #5EEAD4)',
+                        'linear-gradient(90deg, #B45309, #FCD34D)',
+                        'linear-gradient(90deg, #2563EB, #60A5FA)',
+                        'linear-gradient(90deg, #7C3AED, #A78BFA)',
+                        'linear-gradient(90deg, #0F766E, #5EEAD4)',
                       ];
+                      const trendPillTints = [
+                        { bg: '#EBF3FE', color: '#0C447C' },
+                        { bg: '#EEEDFE', color: '#3C3489' },
+                        { bg: '#E1F5EE', color: '#085041' },
+                        { bg: '#FEF3E2', color: '#633806' },
+                      ];
+                      const trendPill = trendPillTints[idx % trendPillTints.length];
                       return (
                         <div
                           key={report.report_id}
-                          className={`flex-shrink-0 w-[240px] rounded-[14px] border border-[#ECEAE6] p-4 text-left relative overflow-hidden group transition-all duration-180 ${
-                            hasAccess ? 'bg-white cursor-pointer' : 'bg-white'
-                          }`}
-                          style={{ opacity: hasAccess ? 1 : 0.80, boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}
-                          onClick={() => { if (hasAccess) handleReportSelect(report); }}
-                          onMouseEnter={(e) => { if (hasAccess) { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = '#D4D0CA'; } }}
-                          onMouseLeave={(e) => { if (hasAccess) { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.03)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = '#ECEAE6'; } }}
+                          className="flex-shrink-0 w-[240px] bg-white rounded-[12px] border border-[#E5E3DF] p-4 text-left relative overflow-hidden group transition-all duration-200"
+                          style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03)', cursor: hasAccess ? 'pointer' : 'default' }}
+                          onClick={() => { if (hasAccess) handleReportFlowEnter(report, idx); }}
+                          onMouseEnter={(e) => { if (hasAccess) { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.borderColor = '#C8C5BF'; e.currentTarget.style.background = '#FDFCFB'; } }}
+                          onMouseLeave={(e) => { if (hasAccess) { e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = '#E5E3DF'; e.currentTarget.style.background = '#FFFFFF'; } }}
                           role={hasAccess ? 'button' : undefined}
                           tabIndex={hasAccess ? 0 : undefined}
                           aria-label={hasAccess ? `Open ${report.report_name}` : undefined}
@@ -6636,22 +6772,22 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                           <div className="absolute bottom-0 left-0 right-0 h-[3px]" style={{ background: trendStripeGradients[idx % trendStripeGradients.length] }} />
                           {hasAccess ? (
                             <>
-                              <ArrowRight className="absolute top-[13px] right-[13px] w-3.5 h-3.5 text-[#AAADA8] opacity-0 translate-x-1 -translate-y-1 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-180" />
-                              <div className="text-[12.5px] font-medium text-[#111110] mb-2 line-clamp-2 pr-5">{report.report_name}</div>
-                              <div className="inline-block text-[10.5px] font-medium text-[#6B6965] bg-[#F4F2EF] border border-[#E5E3DF] px-[7px] py-[2px] rounded mb-2">{report.domain}</div>
+                              <ArrowRight className="absolute top-[13px] right-[13px] w-3.5 h-3.5 text-[#6B6965] opacity-0 -translate-x-1 translate-y-1 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-200" />
+                              <div className="text-[12.5px] font-medium text-[#1C1917] mb-2 line-clamp-2 pr-5">{report.report_name}</div>
+                              <div className="inline-block text-[10.5px] font-semibold px-[7px] py-[2px] rounded-full mb-2" style={{ background: trendPill.bg, color: trendPill.color }}>{report.domain}</div>
                               <div className="text-[10.5px] text-[#8A8785]">Updated {formatRelativeTime(report.last_updated_ts)}</div>
                             </>
                           ) : (
                             <>
                               <div className="text-[12.5px] font-medium mb-2 line-clamp-2 text-[#6B6965]">{report.report_name}</div>
-                              <div className="inline-block text-[10.5px] font-medium text-[#6B6965] bg-[#F4F2EF] border border-[#E5E3DF] px-[7px] py-[2px] rounded mb-2">{report.domain}</div>
-                              <div className="mt-1">
-                                <div className="flex items-center gap-1 mb-2">
+                              <div className="inline-block text-[10.5px] font-medium text-[#8A8785] bg-[#F4F2EF] border border-[#E5E3DF] px-[7px] py-[2px] rounded-full mb-3">{report.domain}</div>
+                              <div>
+                                <div className="flex items-center gap-1 mb-3">
                                   <Shield className="w-3 h-3 text-[#8A8785]" aria-hidden="true" />
-                                  <span className="text-[11.5px] text-[#8A8785]">Access restricted</span>
+                                  <span className="text-[11px] text-[#8A8785]">Access restricted</span>
                                 </div>
                                 {isRequested ? (
-                                  <span className="inline-flex items-center gap-1.5 text-[11.5px] font-medium px-[10px] py-[5px] rounded-[6px]" style={{ background: '#EAF3DE', color: '#3B6D11', border: '1px solid #C0DD97', cursor: 'default', pointerEvents: 'none' }}>
+                                  <span className="inline-flex items-center gap-1.5 text-[11.5px] font-medium w-full justify-center py-[7px] rounded-[7px]" style={{ background: '#EAF3DE', color: '#3B6D11', border: '1px solid #C0DD97', cursor: 'default', pointerEvents: 'none' }}>
                                     <Check className="w-3 h-3" aria-hidden="true" />
                                     Access Requested
                                   </span>
@@ -6664,12 +6800,11 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                                       if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
                                       toastTimerRef.current = setTimeout(() => setToastMessage(null), 3000);
                                     }}
-                                    className="inline-flex items-center gap-1.5 text-[11.5px] font-medium px-[10px] py-[5px] rounded-[6px] cursor-pointer transition-colors duration-150"
-                                    style={{ background: '#FEF0EC', color: '#C24A1E', border: '1px solid #F5C4B3' }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.background = '#FDE4DB'; e.currentTarget.style.borderColor = '#F0997B'; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.background = '#FEF0EC'; e.currentTarget.style.borderColor = '#F5C4B3'; }}
+                                    className="w-full flex items-center justify-center gap-1.5 text-[12px] font-medium py-[7px] rounded-[7px] cursor-pointer transition-all duration-150"
+                                    style={{ background: '#1A1917', color: '#FFFFFF', border: 'none' }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = '#D4572A'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(212,87,42,0.25)'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = '#1A1917'; e.currentTarget.style.boxShadow = 'none'; }}
                                   >
-                                    <ArrowRight className="w-3 h-3" aria-hidden="true" />
                                     Request Access
                                   </button>
                                 )}
@@ -6684,15 +6819,17 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
 
               </div>
             </div>
-              ) : (
-              /* ===== QUICK SUMMARY FLOW VIEW ===== */
+              ) : reportFlowCard !== null ? (
+              /* ===== REPORT FLOW VIEW ===== */
               <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Breadcrumb */}
-                <div className="px-8 pt-5 pb-0">
-                  <div className="flex items-center gap-1.5 text-[12px]">
-                    <button onClick={handleQsFlowExit} className="text-[#D4572A] font-medium hover:opacity-80 transition-opacity duration-150">Talk</button>
-                    <span className="text-[#AAADA8]">\u203A</span>
-                    <span className="text-[#111110] font-medium">{qsFlowData[qsFlowCard!]?.title ?? intentCards[qsFlowCard!]?.title}</span>
+                <div className="px-8 pt-5 pb-0" style={{ paddingTop: 52 }}>
+                  <div className="flex items-center gap-1.5 text-[12px] flex-wrap">
+                    <button onClick={goHome} className="text-[#D4572A] font-medium hover:text-[#BF4D25] transition-colors duration-150">Talk</button>
+                    <span className="text-[#8A8785]">›</span>
+                    <span className="text-[#6B6965]">{reportFlowCard.report.domain}</span>
+                    <span className="text-[#8A8785]">›</span>
+                    <span className="text-[#1C1917] font-medium line-clamp-1">{reportFlowCard.report.report_name}</span>
                   </div>
                 </div>
 
@@ -6702,14 +6839,15 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
 
                     {/* Zone 1 — Context header */}
                     <div
-                      className="rounded-[10px] relative overflow-hidden"
+                      className="rounded-[12px] relative overflow-hidden"
                       style={{
-                        background: cardGradients[qsFlowCard! % cardGradients.length],
+                        background: cardGradients[reportFlowCard.idx % cardGradients.length],
                         padding: '14px 18px',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
                       }}
                     >
                       <button
-                        onClick={handleQsFlowExit}
+                        onClick={goHome}
                         className="absolute top-3 right-4 transition-opacity duration-150 hover:opacity-80"
                         style={{ color: 'rgba(255,255,255,0.50)' }}
                         aria-label="Close"
@@ -6717,24 +6855,22 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                         <X className="w-4 h-4" />
                       </button>
                       <div className="text-[14px] font-semibold mb-1" style={{ color: '#FFFFFF' }}>
-                        {qsFlowData[qsFlowCard!]?.title ?? intentCards[qsFlowCard!]?.title}
+                        {reportFlowCard.report.report_name}
                       </div>
                       <div className="text-[12px]" style={{ color: 'rgba(255,255,255,0.70)' }}>
-                        {qsFlowData[qsFlowCard!]?.subtitle}
+                        {currentReportData.subtitle}
                       </div>
                     </div>
 
                     {/* Zone 2 — AI response */}
-                    <div className="bg-white border border-[#ECEAE6] rounded-[10px] p-5">
-                      {/* Header row */}
+                    <div className="bg-white border border-[#E5E3DF] rounded-[12px] p-5" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03)' }}>
                       <div className="flex items-center gap-2 mb-4">
                         <div className="w-2 h-2 rounded-full bg-[#D4572A] flex-shrink-0" />
                         <span className="text-[12px] text-[#8A8785]">Report Hub AI</span>
                         <span className="text-[10px] text-[#AAADA8] ml-auto">Just now</span>
                       </div>
 
-                      {/* Answer body or shimmer */}
-                      {!qsAnswerLoaded ? (
+                      {!reportAnswerLoaded ? (
                         <div className="space-y-3">
                           <div className="shimmer-line h-4 w-full" />
                           <div className="shimmer-line h-4 w-[92%]" />
@@ -6747,18 +6883,18 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                         <div
                           className="text-[14px] text-[#2C2B29]"
                           style={{ lineHeight: 1.7 }}
-                          dangerouslySetInnerHTML={{ __html: qsFlowData[qsFlowCard!]?.answer ?? '' }}
+                          dangerouslySetInnerHTML={{ __html: currentReportData.answer }}
                         />
                       )}
 
-                      {/* Follow-up chips */}
-                      {qsAnswerLoaded && (
-                        <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-[#ECEAE6]">
-                          {(qsFlowData[qsFlowCard!]?.chips ?? []).map((chip, chipIdx) => (
+                      {reportAnswerLoaded && (
+                        <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-[#E5E3DF]">
+                          {currentReportData.chips.map((chip, chipIdx) => (
                             <button
                               key={chipIdx}
                               onClick={() => { setInputValue(chip); requestAnimationFrame(() => qsInputRef.current?.focus()); }}
-                              className="inline-flex items-center justify-center h-[32px] px-[14px] bg-[#F4F2EF] hover:bg-[#EDEBE6] border border-[#E5E3DF] hover:border-[#CECBC5] rounded-[16px] text-[12px] leading-none whitespace-nowrap text-[#2C2B29] hover:text-[#111110] transition-colors duration-150"
+                              className="inline-flex items-center justify-center h-[32px] px-[14px] bg-white hover:bg-[#F7F6F3] border border-[#E5E3DF] hover:border-[#C8C5BF] rounded-full text-[12px] leading-none whitespace-nowrap text-[#6B6965] hover:text-[#1C1917] transition-all duration-150"
+                              style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
                             >
                               {chip}
                             </button>
@@ -6784,8 +6920,8 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                               if (inputValue.trim()) handleQsFlowSend(inputValue.trim());
                             }
                           }}
-                          placeholder={qsFlowData[qsFlowCard!]?.placeholder ?? 'Ask a follow-up\u2026'}
-                          className="flex-1 px-4 border border-[#E5E3DF] rounded-lg text-[14px] resize-none bg-[#F7F5F2] text-[#111110] placeholder:text-[#AAADA8] input-warm-focus"
+                          placeholder={currentReportData.placeholder}
+                          className="flex-1 px-4 border border-[#E5E3DF] rounded-lg text-[14px] resize-none bg-[#F4F2EF] text-[#1C1917] placeholder:text-[#8A8785] input-warm-focus"
                           style={{ minHeight: '42px', maxHeight: '120px', height: '42px', paddingTop: '10px', paddingBottom: '10px' }}
                           rows={1}
                         />
@@ -6793,8 +6929,441 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                           onClick={() => { if (inputValue.trim()) handleQsFlowSend(inputValue.trim()); }}
                           disabled={!inputValue.trim()}
                           aria-label="Send message"
-                          className="px-6 bg-[#111110] hover:bg-[#2C2B29] text-white rounded-lg text-[13px] font-medium transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                          className="px-6 bg-[#111110] text-white rounded-lg text-[13px] font-medium transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
                           style={{ height: '42px' }}
+                          onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.background = '#D4572A'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(212,87,42,0.25)'; } }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.boxShadow = 'none'; }}
+                        >
+                          <Send className="w-4 h-4" aria-hidden="true" />
+                          Ask
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              ) : (
+              /* ===== QUICK SUMMARY FLOW VIEW ===== */
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Breadcrumb */}
+                <div className="px-8 pb-0" style={{ paddingTop: 52 }}>
+                  <div className="flex items-center gap-1.5 text-[12px]">
+                    <button onClick={goHome} className="text-[#D4572A] font-medium hover:text-[#BF4D25] transition-colors duration-150">Talk</button>
+                    <span className="text-[#8A8785]">›</span>
+                    <span className="text-[#1C1917] font-medium">{qsFlowData[qsFlowCard!]?.title ?? intentCards[qsFlowCard!]?.title}</span>
+                  </div>
+                </div>
+
+                {/* Scrollable content */}
+                <div className="flex-1 overflow-y-auto px-8 pt-5 pb-6">
+                  <div className="w-full max-w-[900px] mx-auto space-y-5">
+
+                    {/* Zone 1 — Context header */}
+                    <div
+                      className="rounded-[12px] relative overflow-hidden"
+                      style={{
+                        background: cardGradients[qsFlowCard! % cardGradients.length],
+                        padding: '14px 18px',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
+                      }}
+                    >
+                      <button
+                        onClick={handleQsFlowExit}
+                        className="absolute top-3 right-4 transition-opacity duration-150 hover:opacity-80"
+                        style={{ color: 'rgba(255,255,255,0.50)' }}
+                        aria-label="Close"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                      <div className="text-[14px] font-semibold mb-1" style={{ color: '#FFFFFF' }}>
+                        {qsFlowData[qsFlowCard!]?.title ?? intentCards[qsFlowCard!]?.title}
+                      </div>
+                      <div className="text-[12px]" style={{ color: 'rgba(255,255,255,0.70)' }}>
+                        {qsFlowData[qsFlowCard!]?.subtitle}
+                      </div>
+                    </div>
+
+                    {/* Zone 2 — AI response */}
+                    <div className="bg-white border border-[#E5E3DF] rounded-[12px] p-5" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03)' }}>
+                      {/* Header row */}
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-2 h-2 rounded-full bg-[#D4572A] flex-shrink-0" />
+                        <span className="text-[12px] text-[#8A8785]">Report Hub AI</span>
+                        <span className="text-[10px] text-[#AAADA8] ml-auto">Just now</span>
+                      </div>
+
+                      {/* Answer body or shimmer */}
+                      {!qsAnswerLoaded ? (
+                        <div className="space-y-3">
+                          <div className="shimmer-line h-4 w-full" />
+                          <div className="shimmer-line h-4 w-[92%]" />
+                          <div className="shimmer-line h-4 w-[85%]" />
+                          <div className="shimmer-line h-4 w-full" />
+                          <div className="shimmer-line h-4 w-[78%]" />
+                          <div className="shimmer-line h-4 w-[60%]" />
+                        </div>
+                      ) : qsFlowCard === 0 ? (
+                        /* ── Campaign Performance — visual response ── */
+                        <div className="space-y-5">
+                          {/* Part A — Key metric pills */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                            {[
+                              { value: '+12%', label: 'Overall engagement', bg: '#EFF6FF', color: '#2563EB' },
+                              { value: '68%',  label: 'Digital engagement',  bg: '#F5F3FF', color: '#7C3AED' },
+                              { value: '28.3%',label: 'Email open rate',     bg: '#F0FDFA', color: '#0D9488' },
+                              { value: '3.2×', label: 'Spring Refresh ROI',  bg: '#FFFBEB', color: '#D97706' },
+                            ].map((m, i) => (
+                              <div key={i} className="rounded-[10px]" style={{ background: m.bg, padding: '12px 16px' }}>
+                                <div style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 18, fontWeight: 700, color: m.color, lineHeight: 1 }}>{m.value}</div>
+                                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#8A8785', marginTop: 5, fontWeight: 400, lineHeight: 1.3 }}>{m.label}</div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Part B — Horizontal bar chart */}
+                          <div>
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#8A8785] mb-3">Channel Performance</p>
+                            <ResponsiveContainer width="100%" height={200}>
+                              <BarChart
+                                layout="vertical"
+                                data={[
+                                  { channel: 'Digital Channels', value: 68,   display: '68%',       color: '#2563EB' },
+                                  { channel: 'Email',            value: 28.3,  display: '28.3%',     color: '#7C3AED' },
+                                  { channel: 'Social Media',     value: 19,    display: '+19% CTR',  color: '#0D9488' },
+                                  { channel: 'Spring Refresh',   value: 64,    display: '3.2× ROI',  color: '#D97706' },
+                                ]}
+                                margin={{ top: 0, right: 52, left: 4, bottom: 0 }}
+                              >
+                                <CartesianGrid horizontal={false} stroke="#F0EDE8" strokeDasharray="0" />
+                                <XAxis
+                                  type="number"
+                                  domain={[0, 80]}
+                                  tick={{ fontSize: 10, fill: '#8A8785', fontFamily: 'Inter, sans-serif' }}
+                                  tickLine={false}
+                                  axisLine={false}
+                                  tickFormatter={(v: number) => `${v}%`}
+                                />
+                                <YAxis
+                                  type="category"
+                                  dataKey="channel"
+                                  width={120}
+                                  tick={{ fontSize: 11, fill: '#6B6965', fontFamily: 'Inter, sans-serif' }}
+                                  tickLine={false}
+                                  axisLine={false}
+                                />
+                                <Tooltip
+                                  cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                                  content={({ active, payload }) => {
+                                    if (!active || !payload?.length) return null;
+                                    const d = payload[0].payload as { channel: string; display: string; color: string };
+                                    return (
+                                      <div style={{ background: '#1A1917', color: '#fff', borderRadius: 6, fontSize: 12, padding: '6px 10px', fontFamily: 'Inter, sans-serif', lineHeight: 1.4 }}>
+                                        <div style={{ fontWeight: 600 }}>{d.display}</div>
+                                        <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11 }}>{d.channel}</div>
+                                      </div>
+                                    );
+                                  }}
+                                />
+                                <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={24} isAnimationActive animationDuration={800} animationEasing="ease-out">
+                                  {[
+                                    { color: '#2563EB' },
+                                    { color: '#7C3AED' },
+                                    { color: '#0D9488' },
+                                    { color: '#D97706' },
+                                  ].map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                  ))}
+                                </Bar>
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
+
+                          {/* Part C — 2-line summary */}
+                          <p className="text-[13.5px] text-[#1C1917]" style={{ lineHeight: 1.65, fontFamily: "'Inter', sans-serif" }}>
+                            Digital is your strongest channel this quarter, up 14pts vs Q4. Email outperforms industry average by 4.3pts.
+                          </p>
+                        </div>
+
+                      ) : qsFlowCard === 1 ? (
+                        /* ── Audience Growth Alert — area chart ── */
+                        <div className="space-y-5">
+                          {/* Part A — Key metric pills */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                            {[
+                              { value: '+23%',  label: 'Digital Natives growth', bg: '#F5F3FF', color: '#7C3AED' },
+                              { value: '142K',  label: 'Segment total users',    bg: '#EFF6FF', color: '#2563EB' },
+                              { value: '4.7×',  label: 'Engagement vs avg',      bg: '#F0FDFA', color: '#0D9488' },
+                              { value: '18%',   label: 'Revenue share',          bg: '#FFFBEB', color: '#D97706' },
+                            ].map((m, i) => (
+                              <div key={i} className="rounded-[10px]" style={{ background: m.bg, padding: '12px 16px' }}>
+                                <div style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 18, fontWeight: 700, color: m.color, lineHeight: 1 }}>{m.value}</div>
+                                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#8A8785', marginTop: 5, fontWeight: 400, lineHeight: 1.3 }}>{m.label}</div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Part B — Area chart: segment growth over 6 months */}
+                          <div>
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#8A8785] mb-3">Segment Growth — Last 6 Months</p>
+                            <ResponsiveContainer width="100%" height={190}>
+                              <AreaChart
+                                data={[
+                                  { month: 'Oct', digital: 72,  overall: 48 },
+                                  { month: 'Nov', digital: 85,  overall: 51 },
+                                  { month: 'Dec', digital: 96,  overall: 53 },
+                                  { month: 'Jan', digital: 108, overall: 55 },
+                                  { month: 'Feb', digital: 124, overall: 57 },
+                                  { month: 'Mar', digital: 142, overall: 59 },
+                                ]}
+                                margin={{ top: 4, right: 16, left: -16, bottom: 0 }}
+                              >
+                                <defs>
+                                  <linearGradient id="gradDigital" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%"  stopColor="#7C3AED" stopOpacity={0.18} />
+                                    <stop offset="95%" stopColor="#7C3AED" stopOpacity={0} />
+                                  </linearGradient>
+                                  <linearGradient id="gradOverall" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%"  stopColor="#2563EB" stopOpacity={0.12} />
+                                    <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
+                                  </linearGradient>
+                                </defs>
+                                <CartesianGrid vertical={false} stroke="#F0EDE8" />
+                                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#8A8785', fontFamily: 'Inter, sans-serif' }} tickLine={false} axisLine={false} />
+                                <YAxis tick={{ fontSize: 10, fill: '#8A8785', fontFamily: 'Inter, sans-serif' }} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v}K`} />
+                                <Tooltip
+                                  content={({ active, payload, label }) => {
+                                    if (!active || !payload?.length) return null;
+                                    return (
+                                      <div style={{ background: '#1A1917', color: '#fff', borderRadius: 6, fontSize: 12, padding: '8px 12px', fontFamily: 'Inter, sans-serif', lineHeight: 1.5 }}>
+                                        <div style={{ fontWeight: 600, marginBottom: 4 }}>{label}</div>
+                                        {payload.map((p: any, i: number) => (
+                                          <div key={i} style={{ color: i === 0 ? '#A78BFA' : '#93C5FD', fontSize: 11 }}>
+                                            {i === 0 ? 'Digital Natives' : 'Overall avg'}: {p.value}K
+                                          </div>
+                                        ))}
+                                      </div>
+                                    );
+                                  }}
+                                />
+                                <Area type="monotone" dataKey="digital" stroke="#7C3AED" strokeWidth={2} fill="url(#gradDigital)" dot={false} activeDot={{ r: 4, fill: '#7C3AED' }} />
+                                <Area type="monotone" dataKey="overall" stroke="#2563EB" strokeWidth={1.5} strokeDasharray="4 3" fill="url(#gradOverall)" dot={false} activeDot={{ r: 4, fill: '#2563EB' }} />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                            <div className="flex items-center gap-4 mt-2">
+                              <div className="flex items-center gap-1.5"><div className="w-3 h-[2px] rounded-full bg-[#7C3AED]" /><span className="text-[10.5px] text-[#8A8785]">Digital Natives</span></div>
+                              <div className="flex items-center gap-1.5"><div className="w-3 h-[1.5px] rounded-full bg-[#2563EB] opacity-60" style={{ backgroundImage: 'repeating-linear-gradient(90deg,#2563EB 0,#2563EB 4px,transparent 4px,transparent 7px)' }} /><span className="text-[10.5px] text-[#8A8785]">Overall avg</span></div>
+                            </div>
+                          </div>
+
+                          {/* Part C — summary */}
+                          <p className="text-[13.5px] text-[#1C1917]" style={{ lineHeight: 1.65, fontFamily: "'Inter', sans-serif" }}>
+                            Digital Natives is your fastest-growing segment, adding 27K users in 6 months. Revenue share jumped from 12% to 18% — the highest cohort contribution on record.
+                          </p>
+                        </div>
+
+                      ) : qsFlowCard === 2 ? (
+                        /* ── Channel Mix Optimization — grouped bar chart ── */
+                        <div className="space-y-5">
+                          {/* Part A — Key metric pills */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                            {[
+                              { value: '3.8%',   label: 'Social conversion rate', bg: '#F5F3FF', color: '#7C3AED' },
+                              { value: '2.4%',   label: 'Paid search conversion', bg: '#F0FDFA', color: '#0D9488' },
+                              { value: '1.8%',   label: 'Email conversion rate',  bg: '#EFF6FF', color: '#2563EB' },
+                              { value: '+9%',    label: 'Projected uplift',        bg: '#FFFBEB', color: '#D97706' },
+                            ].map((m, i) => (
+                              <div key={i} className="rounded-[10px]" style={{ background: m.bg, padding: '12px 16px' }}>
+                                <div style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 18, fontWeight: 700, color: m.color, lineHeight: 1 }}>{m.value}</div>
+                                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#8A8785', marginTop: 5, fontWeight: 400, lineHeight: 1.3 }}>{m.label}</div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Part B — Conversion rate by channel, this quarter vs last */}
+                          <div>
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#8A8785] mb-3">Conversion Rate by Channel — Q4 vs Q1</p>
+                            <ResponsiveContainer width="100%" height={200}>
+                              <BarChart
+                                layout="vertical"
+                                data={[
+                                  { channel: 'Social Media',  q4: 3.2, q1: 3.8 },
+                                  { channel: 'Paid Search',   q4: 2.7, q1: 2.4 },
+                                  { channel: 'Email',         q4: 1.8, q1: 1.8 },
+                                  { channel: 'Display',       q4: 1.1, q1: 0.9 },
+                                ]}
+                                margin={{ top: 0, right: 52, left: 4, bottom: 0 }}
+                                barCategoryGap="28%"
+                                barGap={3}
+                              >
+                                <CartesianGrid horizontal={false} stroke="#F0EDE8" />
+                                <XAxis type="number" domain={[0, 5]} tick={{ fontSize: 10, fill: '#8A8785', fontFamily: 'Inter, sans-serif' }} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v}%`} />
+                                <YAxis type="category" dataKey="channel" width={96} tick={{ fontSize: 11, fill: '#6B6965', fontFamily: 'Inter, sans-serif' }} tickLine={false} axisLine={false} />
+                                <Tooltip
+                                  cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                                  content={({ active, payload, label }) => {
+                                    if (!active || !payload?.length) return null;
+                                    return (
+                                      <div style={{ background: '#1A1917', color: '#fff', borderRadius: 6, fontSize: 12, padding: '8px 12px', fontFamily: 'Inter, sans-serif', lineHeight: 1.5 }}>
+                                        <div style={{ fontWeight: 600, marginBottom: 4 }}>{label}</div>
+                                        {payload.map((p: any, i: number) => (
+                                          <div key={i} style={{ color: i === 0 ? '#93C5FD' : '#A78BFA', fontSize: 11 }}>
+                                            {i === 0 ? 'Q4' : 'Q1'}: {p.value}%
+                                          </div>
+                                        ))}
+                                      </div>
+                                    );
+                                  }}
+                                />
+                                <Bar dataKey="q4" barSize={10} radius={[0, 3, 3, 0]} fill="#E0E7FF" isAnimationActive animationDuration={800} animationEasing="ease-out" />
+                                <Bar dataKey="q1" barSize={10} radius={[0, 3, 3, 0]} isAnimationActive animationDuration={800} animationEasing="ease-out">
+                                  {[
+                                    { color: '#7C3AED' },
+                                    { color: '#0D9488' },
+                                    { color: '#2563EB' },
+                                    { color: '#D97706' },
+                                  ].map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                  ))}
+                                </Bar>
+                              </BarChart>
+                            </ResponsiveContainer>
+                            <div className="flex items-center gap-4 mt-2">
+                              <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-[#E0E7FF]" /><span className="text-[10.5px] text-[#8A8785]">Q4 (prior)</span></div>
+                              <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-[#7C3AED]" /><span className="text-[10.5px] text-[#8A8785]">Q1 (current)</span></div>
+                            </div>
+                          </div>
+
+                          {/* Part C — summary */}
+                          <p className="text-[13.5px] text-[#1C1917]" style={{ lineHeight: 1.65, fontFamily: "'Inter', sans-serif" }}>
+                            Social is now 2.1× more efficient than email on conversion. Shifting 15% of email budget ($12K/month) toward social and paid search is projected to increase total conversions by 8–11%.
+                          </p>
+                        </div>
+
+                      ) : qsFlowCard === 3 ? (
+                        /* ── Budget Utilization — horizontal utilization bars ── */
+                        <div className="space-y-5">
+                          {/* Part A — Key metric pills */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                            {[
+                              { value: '67%',   label: 'Budget deployed',       bg: '#EFF6FF', color: '#2563EB' },
+                              { value: '$158K', label: 'Remaining this quarter', bg: '#F0FDFA', color: '#0D9488' },
+                              { value: '4.1×',  label: 'Influencer ROAS',        bg: '#FFFBEB', color: '#D97706' },
+                              { value: '−8%',   label: 'Paid media vs plan',     bg: '#FEF2F2', color: '#B91C1C' },
+                            ].map((m, i) => (
+                              <div key={i} className="rounded-[10px]" style={{ background: m.bg, padding: '12px 16px' }}>
+                                <div style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 18, fontWeight: 700, color: m.color, lineHeight: 1 }}>{m.value}</div>
+                                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#8A8785', marginTop: 5, fontWeight: 400, lineHeight: 1.3 }}>{m.label}</div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Part B — Budget utilization % by category */}
+                          <div>
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#8A8785] mb-3">Budget Utilization by Category</p>
+                            <ResponsiveContainer width="100%" height={210}>
+                              <BarChart
+                                layout="vertical"
+                                data={[
+                                  { category: 'Influencer',         pct: 88, target: 100, color: '#D97706' },
+                                  { category: 'Content Marketing',  pct: 71, target: 100, color: '#2563EB' },
+                                  { category: 'Events',             pct: 70, target: 100, color: '#0D9488' },
+                                  { category: 'Paid Media',         pct: 80, target: 88,  color: '#B91C1C' },
+                                  { category: 'Other',              pct: 55, target: 100, color: '#7C3AED' },
+                                ]}
+                                margin={{ top: 0, right: 56, left: 4, bottom: 0 }}
+                              >
+                                <CartesianGrid horizontal={false} stroke="#F0EDE8" />
+                                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: '#8A8785', fontFamily: 'Inter, sans-serif' }} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v}%`} />
+                                <YAxis type="category" dataKey="category" width={120} tick={{ fontSize: 11, fill: '#6B6965', fontFamily: 'Inter, sans-serif' }} tickLine={false} axisLine={false} />
+                                <Tooltip
+                                  cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                                  content={({ active, payload }) => {
+                                    if (!active || !payload?.length) return null;
+                                    const d = payload[0].payload as { category: string; pct: number; target: number };
+                                    return (
+                                      <div style={{ background: '#1A1917', color: '#fff', borderRadius: 6, fontSize: 12, padding: '8px 12px', fontFamily: 'Inter, sans-serif', lineHeight: 1.5 }}>
+                                        <div style={{ fontWeight: 600, marginBottom: 3 }}>{d.category}</div>
+                                        <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11 }}>{d.pct}% of {d.target}% target deployed</div>
+                                      </div>
+                                    );
+                                  }}
+                                />
+                                <Bar dataKey="pct" radius={[0, 4, 4, 0]} barSize={22} isAnimationActive animationDuration={800} animationEasing="ease-out">
+                                  {[
+                                    { color: '#D97706' },
+                                    { color: '#2563EB' },
+                                    { color: '#0D9488' },
+                                    { color: '#EF4444' },
+                                    { color: '#7C3AED' },
+                                  ].map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                  ))}
+                                </Bar>
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
+
+                          {/* Part C — summary */}
+                          <p className="text-[13.5px] text-[#1C1917]" style={{ lineHeight: 1.65, fontFamily: "'Inter', sans-serif" }}>
+                            Influencer is your most efficient spend at 4.1× ROAS. Paid media is 8% behind plan — reallocating $20K of the remaining $38K toward high-performing social campaigns is projected to yield $82K in incremental revenue.
+                          </p>
+                        </div>
+
+                      ) : (
+                        <div
+                          className="text-[14px] text-[#2C2B29]"
+                          style={{ lineHeight: 1.7 }}
+                          dangerouslySetInnerHTML={{ __html: qsFlowData[qsFlowCard!]?.answer ?? '' }}
+                        />
+                      )}
+
+                      {/* Follow-up chips */}
+                      {qsAnswerLoaded && (
+                        <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-[#E5E3DF]">
+                          {(qsFlowData[qsFlowCard!]?.chips ?? []).map((chip, chipIdx) => (
+                            <button
+                              key={chipIdx}
+                              onClick={() => { setInputValue(chip); requestAnimationFrame(() => qsInputRef.current?.focus()); }}
+                              className="inline-flex items-center justify-center h-[32px] px-[14px] bg-white hover:bg-[#F7F6F3] border border-[#E5E3DF] hover:border-[#C8C5BF] rounded-full text-[12px] leading-none whitespace-nowrap text-[#6B6965] hover:text-[#1C1917] transition-all duration-150"
+                              style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
+                            >
+                              {chip}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* Zone 3 — Input (pinned to bottom) */}
+                <div className="px-8 pb-5 pt-3">
+                  <div className="w-full max-w-[900px] mx-auto">
+                    <div className="bg-white border border-[#E5E3DF] rounded-[12px] p-3">
+                      <div className="flex gap-3 items-end">
+                        <textarea
+                          value={inputValue}
+                          onChange={(e) => setInputValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              if (inputValue.trim()) handleQsFlowSend(inputValue.trim());
+                            }
+                          }}
+                              placeholder={qsFlowData[qsFlowCard!]?.placeholder ?? 'Ask a follow-up\u2026'}
+                          className="flex-1 px-4 border border-[#E5E3DF] rounded-lg text-[14px] resize-none bg-[#F4F2EF] text-[#1C1917] placeholder:text-[#8A8785] input-warm-focus"
+                          style={{ minHeight: '42px', maxHeight: '120px', height: '42px', paddingTop: '10px', paddingBottom: '10px' }}
+                          rows={1}
+                        />
+                        <button
+                          onClick={() => { if (inputValue.trim()) handleQsFlowSend(inputValue.trim()); }}
+                          disabled={!inputValue.trim()}
+                          aria-label="Send message"
+                          className="px-6 bg-[#111110] text-white rounded-lg text-[13px] font-medium transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                          style={{ height: '42px' }}
+                          onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.background = '#D4572A'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(212,87,42,0.25)'; } }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.boxShadow = 'none'; }}
                         >
                           <Send className="w-4 h-4" aria-hidden="true" />
                           Ask
@@ -6822,11 +7391,11 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
 
                   {isGenerating && (
                     <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                        <Sparkles className="w-4 h-4 text-blue-700 animate-pulse" />
+                      <div className="w-8 h-8 rounded-full bg-[#FEF0EC] flex items-center justify-center flex-shrink-0 flex-shrink-0">
+                        <Sparkles className="w-4 h-4 text-[#D4572A] animate-pulse" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-[13px] text-[#6B7280]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        <p className="text-[13px] text-[#6B6965]" style={{ fontFamily: 'Inter, sans-serif' }}>
                           Thinking...
                         </p>
                       </div>
@@ -6840,10 +7409,10 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
               <div
                 className="p-6"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.85)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  borderTop: '1px solid rgba(0, 0, 0, 0.06)',
+                  background: 'rgba(247, 246, 243, 0.88)',
+                  backdropFilter: 'blur(16px) saturate(1.4)',
+                  WebkitBackdropFilter: 'blur(16px) saturate(1.4)',
+                  borderTop: '1px solid rgba(229, 227, 223, 0.80)',
                 }}
               >
                 <div className="max-w-[900px] mx-auto flex gap-3 items-end">
@@ -6852,15 +7421,17 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Ask a follow-up, explore more data, or refine your request…"
-                    className="flex-1 px-4 py-3 border border-[#E5E7EB] rounded-xl text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/90 shadow-sm"
+                    className="flex-1 px-4 py-3 border border-[#E5E3DF] rounded-lg text-[13px] resize-none bg-[#F4F2EF] text-[#1C1917] placeholder:text-[#8A8785] input-warm-focus"
                     style={{ fontFamily: 'Inter, sans-serif', minHeight: '52px', maxHeight: '120px' }}
                     rows={1}
                   />
                   <button
                     onClick={handleAsk}
                     disabled={!inputValue.trim() || isGenerating}
-                    className="px-5 py-3 bg-[#111827] hover:bg-[#0F172A] text-white rounded-xl text-[13px] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
+                    className="px-5 py-3 bg-[#111110] text-white rounded-lg text-[13px] font-medium transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     style={{ fontFamily: 'Inter, sans-serif', height: '52px' }}
+                    onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.background = '#D4572A'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(212,87,42,0.25)'; } }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.boxShadow = 'none'; }}
                   >
                     <Send className="w-4 h-4" />
                     Ask
