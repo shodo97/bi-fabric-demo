@@ -7380,8 +7380,43 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
 
           {/* STATE 2: ACTIVE CONVERSATION */}
           {(flowState === 'active' || messages.length > 0) && (
-            <>
-              <div className="flex-1 overflow-y-auto px-8 pt-8">
+            <div className="flex-1 flex flex-col relative overflow-hidden">
+
+              {/* Floating Talk Home pill — matches QS/report flow layout */}
+              <button
+                onClick={handleNewConversation}
+                aria-label="Back to Talk home"
+                style={{
+                  position: 'absolute',
+                  top: 16,
+                  left: 32,
+                  zIndex: 20,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  background: '#FFFFFF',
+                  border: '1px solid #E5E3DF',
+                  borderRadius: 20,
+                  padding: '6px 14px 6px 10px',
+                  fontSize: 12.5,
+                  fontWeight: 500,
+                  color: '#2C2B29',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+                  cursor: 'pointer',
+                  fontFamily: "'Inter', sans-serif",
+                  transition: 'all 0.15s ease',
+                  minHeight: 32,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#F4F2EF'; e.currentTarget.style.borderColor = '#D4D0CA'; e.currentTarget.style.transform = 'translateX(-2px)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.borderColor = '#E5E3DF'; e.currentTarget.style.transform = ''; }}
+              >
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+                  <path d="M8.5 2.5L4.5 6.5L8.5 10.5" stroke="#6B6865" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Talk home
+              </button>
+
+              <div className="flex-1 overflow-y-auto px-8" style={{ paddingTop: 64 }}>
                 <div className="max-w-[900px] mx-auto space-y-6 pb-6">
                   {messages.map((message) => (
                     <div key={message.id}>
@@ -7438,7 +7473,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                   </button>
                 </div>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>
