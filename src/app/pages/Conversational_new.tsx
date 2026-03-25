@@ -6716,7 +6716,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                       return (
                       <button
                         key={report.report_id}
-                        onClick={() => handleReportClick(report)}
+                        onClick={() => navigate(`/reports/${report.report_id}`)}
                         className="flex-shrink-0 w-[240px] bg-white rounded-[12px] border border-[#E5E3DF] p-4 text-left cursor-pointer relative group overflow-hidden transition-all duration-200"
                         style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03)' }}
                         onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.borderColor = '#C8C5BF'; e.currentTarget.style.background = '#FDFCFB'; }}
@@ -6768,7 +6768,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                           style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03)', cursor: 'pointer' }}
                           onClick={() => {
                             if (hasAccess) {
-                              handleReportClick(report);
+                              navigate(`/reports/${report.report_id}`);
                             } else if (!isRequested) {
                               setRequestedReportIds(prev => new Set(prev).add(report.report_id));
                               setToastMessage(report.report_name);
@@ -7398,7 +7398,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                             {/* Go to Source */}
                             {sourceReport && (
                               <button
-                                onClick={() => { setQsAddToReportOpen(false); handleReportClick(sourceReport); }}
+                                onClick={() => { setQsAddToReportOpen(false); navigate(`/reports/${sourceReport.report_id}`); }}
                                 className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-[6px] rounded-[8px] transition-all duration-150"
                                 style={{ background: '#FFFFFF', color: '#1C1917', border: '1px solid #E5E3DF' }}
                                 onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#C8C5BF'; e.currentTarget.style.background = '#F7F6F3'; }}
