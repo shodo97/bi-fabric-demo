@@ -422,8 +422,8 @@ const ChurnRateChart = React.memo(({ data, reportId }: { data: any[]; reportId: 
   const isChurn = reportId === 'RPT-CHURN-001';
   const yAxisLabel = isChurn ? 'Churn Rate (%)' : 'Performance (%)';
   const yDomain: [number, number] = isChurn ? [0, 8] : [0, 100];
-  const barColor = isChurn ? '#60A5FA' : '#D4572A';
   const metricLabel = isChurn ? 'Churn Rate' : 'Value';
+  const gradientId = `blueGrad-${reportId}`;
 
   return (
     <div key="report-chart-wrapper" className="w-full mb-4" style={{ height: '240px', display: 'block' }}>
@@ -432,6 +432,12 @@ const ChurnRateChart = React.memo(({ data, reportId }: { data: any[]; reportId: 
           data={data}
           margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
         >
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#2563EB" />
+              <stop offset="100%" stopColor="#60A5FA" />
+            </linearGradient>
+          </defs>
           <XAxis
             key={`xaxis-${reportId}`}
             dataKey="month"
@@ -448,11 +454,11 @@ const ChurnRateChart = React.memo(({ data, reportId }: { data: any[]; reportId: 
             domain={yDomain}
             tickFormatter={(value) => `${value}%`}
           />
-          <Tooltip key={`tooltip-${reportId}`} content={<ChurnTooltip metricLabel={metricLabel} />} cursor={{ fill: 'rgba(96, 165, 250, 0.1)' }} />
+          <Tooltip key={`tooltip-${reportId}`} content={<ChurnTooltip metricLabel={metricLabel} />} cursor={{ fill: 'rgba(96, 165, 250, 0.08)' }} />
           <Bar
             key={`bar-${reportId}`}
             dataKey="churn_rate"
-            fill={barColor}
+            fill={`url(#${gradientId})`}
             radius={[6, 6, 0, 0]}
             isAnimationActive={false}
           />
