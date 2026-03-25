@@ -300,6 +300,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
   const qsInputRef = useRef<HTMLTextAreaElement>(null);
   const [reportFlowCard, setReportFlowCard] = useState<{ report: any; idx: number } | null>(null);
   const [reportAnswerLoaded, setReportAnswerLoaded] = useState(false);
+  const [qsAddToReportOpen, setQsAddToReportOpen] = useState(false);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [selectedExecutionPath, setSelectedExecutionPath] = useState<'open_source' | 'enterprise_bi'>('open_source');
   const [selectedEnterprisePlatform, setSelectedEnterprisePlatform] = useState<'Looker' | 'Qlik' | 'Tableau' | null>(null);
@@ -6555,10 +6556,10 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                     Good morning, Alex
                   </p>
                   <h1 className="text-[30px] text-[#111110] mb-2" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 700, letterSpacing: '-0.8px', lineHeight: 1.15 }}>
-                    What would you like to <span style={{ color: '#D4572A' }}>work on?</span>
+                    Explore your report data set and <span style={{ color: '#D4572A' }}>ask questions</span>
                   </h1>
                   <p className="text-[14px] text-[#6B6965]">
-                    Explore your reports and datasets, ask a question, or create something new.
+                    Open a report or dataset, ask a question, or create something new.
                   </p>
                 </div>
 
@@ -6715,7 +6716,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                       return (
                       <button
                         key={report.report_id}
-                        onClick={() => handleReportFlowEnter(report, idx)}
+                        onClick={() => handleReportClick(report)}
                         className="flex-shrink-0 w-[240px] bg-white rounded-[12px] border border-[#E5E3DF] p-4 text-left cursor-pointer relative group overflow-hidden transition-all duration-200"
                         style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03)' }}
                         onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.borderColor = '#C8C5BF'; e.currentTarget.style.background = '#FDFCFB'; }}
@@ -6723,6 +6724,9 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                       >
                         <div className="absolute bottom-0 left-0 right-0 h-[3px]" style={{ background: stripeGradients[idx % stripeGradients.length] }} />
                         <ArrowRight className="absolute top-[13px] right-[13px] w-3.5 h-3.5 text-[#6B6965] opacity-0 -translate-x-1 translate-y-1 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-200" />
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <span className="inline-block text-[9.5px] font-semibold uppercase tracking-[0.05em] px-[6px] py-[2px] rounded-full" style={{ background: '#F4F2EF', color: '#6B6965', border: '1px solid #E5E3DF' }}>Report</span>
+                        </div>
                         <div className="text-[12.5px] font-medium text-[#1C1917] mb-2 line-clamp-2 pr-5">{report.report_name}</div>
                         <div className="inline-block text-[10.5px] font-semibold px-[7px] py-[2px] rounded-full mb-2" style={{ background: pillStyle.bg, color: pillStyle.color }}>{report.domain}</div>
                         <div className="text-[10.5px] text-[#8A8785]">Updated {formatRelativeTime(report.last_updated_ts)}</div>
@@ -6761,24 +6765,39 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                         <div
                           key={report.report_id}
                           className="flex-shrink-0 w-[240px] bg-white rounded-[12px] border border-[#E5E3DF] p-4 text-left relative overflow-hidden group transition-all duration-200"
-                          style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03)', cursor: hasAccess ? 'pointer' : 'default' }}
-                          onClick={() => { if (hasAccess) handleReportFlowEnter(report, idx); }}
-                          onMouseEnter={(e) => { if (hasAccess) { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.borderColor = '#C8C5BF'; e.currentTarget.style.background = '#FDFCFB'; } }}
-                          onMouseLeave={(e) => { if (hasAccess) { e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = '#E5E3DF'; e.currentTarget.style.background = '#FFFFFF'; } }}
-                          role={hasAccess ? 'button' : undefined}
-                          tabIndex={hasAccess ? 0 : undefined}
-                          aria-label={hasAccess ? `Open ${report.report_name}` : undefined}
+                          style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03)', cursor: 'pointer' }}
+                          onClick={() => {
+                            if (hasAccess) {
+                              handleReportClick(report);
+                            } else if (!isRequested) {
+                              setRequestedReportIds(prev => new Set(prev).add(report.report_id));
+                              setToastMessage(report.report_name);
+                              if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+                              toastTimerRef.current = setTimeout(() => setToastMessage(null), 3000);
+                            }
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.borderColor = '#C8C5BF'; e.currentTarget.style.background = '#FDFCFB'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = '#E5E3DF'; e.currentTarget.style.background = '#FFFFFF'; }}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={hasAccess ? `Open ${report.report_name}` : `Request access to ${report.report_name}`}
                         >
                           <div className="absolute bottom-0 left-0 right-0 h-[3px]" style={{ background: trendStripeGradients[idx % trendStripeGradients.length] }} />
                           {hasAccess ? (
                             <>
                               <ArrowRight className="absolute top-[13px] right-[13px] w-3.5 h-3.5 text-[#6B6965] opacity-0 -translate-x-1 translate-y-1 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-200" />
+                              <div className="flex items-center gap-1.5 mb-2">
+                                <span className="inline-block text-[9.5px] font-semibold uppercase tracking-[0.05em] px-[6px] py-[2px] rounded-full" style={{ background: '#F4F2EF', color: '#6B6965', border: '1px solid #E5E3DF' }}>Report</span>
+                              </div>
                               <div className="text-[12.5px] font-medium text-[#1C1917] mb-2 line-clamp-2 pr-5">{report.report_name}</div>
                               <div className="inline-block text-[10.5px] font-semibold px-[7px] py-[2px] rounded-full mb-2" style={{ background: trendPill.bg, color: trendPill.color }}>{report.domain}</div>
                               <div className="text-[10.5px] text-[#8A8785]">Updated {formatRelativeTime(report.last_updated_ts)}</div>
                             </>
                           ) : (
                             <>
+                              <div className="flex items-center gap-1.5 mb-2">
+                                <span className="inline-block text-[9.5px] font-semibold uppercase tracking-[0.05em] px-[6px] py-[2px] rounded-full" style={{ background: '#F4F2EF', color: '#8A8785', border: '1px solid #E5E3DF' }}>Report</span>
+                              </div>
                               <div className="text-[12.5px] font-medium mb-2 line-clamp-2 text-[#6B6965]">{report.report_name}</div>
                               <div className="inline-block text-[10.5px] font-medium text-[#8A8785] bg-[#F4F2EF] border border-[#E5E3DF] px-[7px] py-[2px] rounded-full mb-3">{report.domain}</div>
                               <div>
@@ -7332,6 +7351,66 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                           ))}
                         </div>
                       )}
+
+                      {/* QS Actions — Add to Report + Go to Source */}
+                      {qsAnswerLoaded && (() => {
+                        const qsSourceReportIds = ['RPT-001', 'RPT-CHURN-001', 'RPT-002', 'RPT-003'];
+                        const sourceReport = catalogReports.find(r => r.report_id === qsSourceReportIds[qsFlowCard! % qsSourceReportIds.length]);
+                        const addTargetReports = catalogReports.slice(0, 5);
+                        return (
+                          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[#F0EDE8]">
+                            {/* Add to Report */}
+                            <div className="relative">
+                              <button
+                                onClick={() => setQsAddToReportOpen(v => !v)}
+                                className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-[6px] rounded-[8px] transition-all duration-150"
+                                style={{ background: '#1A1917', color: '#FFFFFF', border: 'none' }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = '#D4572A'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(212,87,42,0.25)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = '#1A1917'; e.currentTarget.style.boxShadow = 'none'; }}
+                              >
+                                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M6.5 2v9M2 6.5h9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                                Add to Report
+                              </button>
+                              {qsAddToReportOpen && (
+                                <div className="absolute left-0 top-full mt-1.5 z-50 bg-white rounded-[10px] border border-[#E5E3DF] overflow-hidden" style={{ minWidth: 230, boxShadow: '0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06)' }}>
+                                  <div className="px-3 py-2 border-b border-[#F0EDE8]">
+                                    <p className="text-[10.5px] font-semibold uppercase tracking-[0.05em] text-[#8A8785]">Add chart to report</p>
+                                  </div>
+                                  {addTargetReports.map((r) => (
+                                    <button
+                                      key={r.report_id}
+                                      className="w-full text-left px-3 py-2.5 text-[12.5px] text-[#1C1917] hover:bg-[#F7F6F3] transition-colors duration-100 flex items-center gap-2"
+                                      onClick={() => {
+                                        setQsAddToReportOpen(false);
+                                        setToastMessage(`Chart added to "${r.report_name}"`);
+                                        if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+                                        toastTimerRef.current = setTimeout(() => setToastMessage(null), 3000);
+                                      }}
+                                    >
+                                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="1" y="1" width="10" height="10" rx="2" stroke="#8A8785" strokeWidth="1.2"/><path d="M4 6h4M6 4v4" stroke="#8A8785" strokeWidth="1.2" strokeLinecap="round"/></svg>
+                                      <span className="line-clamp-1">{r.report_name}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Go to Source */}
+                            {sourceReport && (
+                              <button
+                                onClick={() => { setQsAddToReportOpen(false); handleReportClick(sourceReport); }}
+                                className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-[6px] rounded-[8px] transition-all duration-150"
+                                style={{ background: '#FFFFFF', color: '#1C1917', border: '1px solid #E5E3DF' }}
+                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#C8C5BF'; e.currentTarget.style.background = '#F7F6F3'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E5E3DF'; e.currentTarget.style.background = '#FFFFFF'; }}
+                              >
+                                <ExternalLink className="w-3 h-3" aria-hidden="true" />
+                                Go to Source
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
 
                   </div>
