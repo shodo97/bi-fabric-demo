@@ -8108,7 +8108,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
         }}
       >
         <Check className="w-3.5 h-3.5" style={{ color: '#10B981' }} />
-        <span>Access requested for <strong>{toastMessage}</strong></span>
+        <span>Chart added to <strong>{toastMessage}</strong></span>
       </div>
 
     </Layout>
