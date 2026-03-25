@@ -391,21 +391,22 @@ function ReportsIndexView() {
   );
 }
 
-// Custom Tooltip for Churn Chart
-const ChurnTooltip = ({ active, payload }: any) => {
+// Custom Tooltip for Chart
+const ChurnTooltip = ({ active, payload, metricLabel }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     const change = data.change_vs_previous_month;
     const changeDirection = change > 0 ? '↑' : change < 0 ? '↓' : '→';
     const changeColor = change > 0 ? '#EF4444' : change < 0 ? '#10B981' : '#6B7280';
-    
+    const label = metricLabel || 'Value';
+
     return (
       <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3" style={{ fontFamily: 'Inter, sans-serif' }}>
         <p className="text-[12px] font-semibold text-[#111827] mb-2">{data.month}</p>
         <p className="text-[13px] text-[#111827] mb-1">
-          Churn Rate: <span className="font-bold">{data.churn_rate}%</span>
+          {label}: <span className="font-bold">{data.churn_rate}%</span>
         </p>
-        {change !== 0 && (
+        {change !== undefined && change !== 0 && (
           <p className="text-[11px]" style={{ color: changeColor }}>
             {changeDirection} {Math.abs(change).toFixed(1)}% vs previous month
           </p>
@@ -418,34 +419,40 @@ const ChurnTooltip = ({ active, payload }: any) => {
 
 // Memoized Chart Component to prevent unnecessary re-renders
 const ChurnRateChart = React.memo(({ data, reportId }: { data: any[]; reportId: string }) => {
+  const isChurn = reportId === 'RPT-CHURN-001';
+  const yAxisLabel = isChurn ? 'Churn Rate (%)' : 'Performance (%)';
+  const yDomain: [number, number] = isChurn ? [0, 8] : [0, 100];
+  const barColor = isChurn ? '#60A5FA' : '#D4572A';
+  const metricLabel = isChurn ? 'Churn Rate' : 'Value';
+
   return (
     <div key="report-chart-wrapper" className="w-full mb-4" style={{ height: '240px', display: 'block' }}>
       <ResponsiveContainer key={`chart-container-${reportId}`} width="100%" height={240}>
-        <BarChart 
-          data={data} 
+        <BarChart
+          data={data}
           margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
         >
-          <XAxis 
+          <XAxis
             key={`xaxis-${reportId}`}
-            dataKey="month" 
+            dataKey="month"
             axisLine={false}
             tickLine={false}
             tick={{ fill: '#6B7280', fontSize: 11, fontFamily: 'Inter, sans-serif' }}
           />
-          <YAxis 
+          <YAxis
             key={`yaxis-${reportId}`}
-            label={{ value: 'Churn Rate (%)', angle: -90, position: 'insideLeft', style: { fill: '#6B7280', fontSize: 11, fontFamily: 'Inter, sans-serif' } }}
+            label={{ value: yAxisLabel, angle: -90, position: 'insideLeft', style: { fill: '#6B7280', fontSize: 11, fontFamily: 'Inter, sans-serif' } }}
             axisLine={false}
             tickLine={false}
             tick={{ fill: '#6B7280', fontSize: 11, fontFamily: 'Inter, sans-serif' }}
-            domain={[0, 8]}
+            domain={yDomain}
             tickFormatter={(value) => `${value}%`}
           />
-          <Tooltip key={`tooltip-${reportId}`} content={<ChurnTooltip />} cursor={{ fill: 'rgba(96, 165, 250, 0.1)' }} />
-          <Bar 
+          <Tooltip key={`tooltip-${reportId}`} content={<ChurnTooltip metricLabel={metricLabel} />} cursor={{ fill: 'rgba(96, 165, 250, 0.1)' }} />
+          <Bar
             key={`bar-${reportId}`}
             dataKey="churn_rate"
-            fill="#60A5FA"
+            fill={barColor}
             radius={[6, 6, 0, 0]}
             isAnimationActive={false}
           />

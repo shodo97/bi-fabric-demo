@@ -1499,16 +1499,19 @@ export const getReportPreviewData = (reportId: string) => {
     ];
   }
   
-  // For other standard reports, return a simple trend based on report domain
-  if (report.domain === 'Sales' || report.domain === 'Operations') {
-    return getMonthlyTakeRateTrend();
-  } else if (report.domain === 'Customer Experience') {
+  // For other standard reports, normalize to churn_rate field for chart compatibility
+  if (report.domain === 'Customer Experience') {
     return getMonthlyTakeRateTrend().map(m => ({
       month: m.month,
-      value: 85 + Math.random() * 10, // RIS-like metric
+      churn_rate: Math.round((85 + Math.random() * 10) * 10) / 10,
+      change_vs_previous_month: 0,
     }));
   } else {
-    return getMonthlyTakeRateTrend();
+    return getMonthlyTakeRateTrend().map(m => ({
+      month: m.month,
+      churn_rate: m.takeRate,
+      change_vs_previous_month: 0,
+    }));
   }
 };
 
