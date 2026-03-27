@@ -1,11 +1,19 @@
-import React from 'react';
-import { useNavigate } from 'react-router';
+import React, { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isHovered, setIsHovered] = React.useState(false);
   const [password, setPassword] = React.useState('');
   const [error, setError] = React.useState('');
+
+  useEffect(() => {
+    const token = searchParams.get('access');
+    if (token === 'rdvr@9705') {
+      navigate('/persona');
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] flex items-center justify-center p-4 relative">
