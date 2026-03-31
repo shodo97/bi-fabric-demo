@@ -1143,7 +1143,7 @@ function ReportDetailView({ reportId }: { reportId: string }) {
             Report Preview
           </h2>
           <button
-            onClick={() => window.open(`${window.location.origin}/reports/${reportId}/full`, '_blank')}
+            onClick={() => navigate(`/reports/${reportId}/full`)}
             className="px-4 py-2 bg-[#111827] hover:bg-[#0F172A] text-white rounded-lg text-[13px] font-medium transition-colors"
             style={{ fontFamily: 'Inter, sans-serif' }}
           >
