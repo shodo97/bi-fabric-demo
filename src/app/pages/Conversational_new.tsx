@@ -293,6 +293,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
   const [referenceReportName, setReferenceReportName] = useState<string>('');
   const [requestedReportIds, setRequestedReportIds] = useState<Set<string>>(new Set());
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'chart-added' | 'access-requested'>('chart-added');
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [qsFlowCard, setQsFlowCard] = useState<number | null>(null);
   const [qsFading, setQsFading] = useState(false);
@@ -6815,6 +6816,7 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setRequestedReportIds(prev => new Set(prev).add(report.report_id));
+                                      setToastType('access-requested');
                                       setToastMessage(report.report_name);
                                       if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
                                       toastTimerRef.current = setTimeout(() => setToastMessage(null), 3000);
@@ -7382,7 +7384,8 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
                                       className="w-full text-left px-3 py-2.5 text-[12.5px] text-[#1C1917] hover:bg-[#F7F6F3] transition-colors duration-100 flex items-center gap-2"
                                       onClick={() => {
                                         setQsAddToReportOpen(false);
-                                        setToastMessage(`Chart added to "${r.report_name}"`);
+                                        setToastType('chart-added');
+                                        setToastMessage(r.report_name);
                                         if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
                                         toastTimerRef.current = setTimeout(() => setToastMessage(null), 3000);
                                       }}
@@ -8108,7 +8111,10 @@ export function ConversationalPage({ isReportFlowMode = false }: { isReportFlowM
         }}
       >
         <Check className="w-3.5 h-3.5" style={{ color: '#10B981' }} />
-        <span>Chart added to <strong>{toastMessage}</strong></span>
+        {toastType === 'access-requested'
+          ? <span>Access requested for <strong>{toastMessage}</strong></span>
+          : <span>Chart added to <strong>{toastMessage}</strong></span>
+        }
       </div>
 
     </Layout>
