@@ -192,7 +192,6 @@ export function EnterpriseBIPage() {
 
             {/* Primary Action */}
             <button
-              onClick={() => window.open(platform.url, '_blank')}
               className="w-full px-4 py-2.5 bg-[#111827] hover:bg-[#0F172A] text-white rounded-lg text-[13px] font-medium transition-colors flex items-center justify-center gap-2"
               style={{ fontFamily: 'Inter, sans-serif' }}
             >
